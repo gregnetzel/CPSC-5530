@@ -42,53 +42,56 @@ void schedule();
 //
 //*****************************************************************************
 
+struct MyStruct{
+  void (*myTask)(void*);
+  void* taskDataPtr;
+};typedef struct MyStruct TCB;
+
 int main(void)
 {
 
     //  define some local variables
     volatile int i = 0;
-    unsigned long locPrintDelay = 10;
-    unsigned long locDelDelay = 5;
     RIT128x96x4Init(1000000);
-    //
-    // The value if i is:
-    //
-    RIT128x96x4StringDraw("The value of i is:", 0, 0, 15);
-    
-    //
-    //  print the digits 9 8 7 6 5 4 3 2 1 0
+    TCB taskManager[6];
+    taskManager[0].myTask = measure;
+    taskManager[1].myTask = compute;
+    taskManager[2].myTask = display;
+    taskManager[3].myTask = annunciate;
+    taskManager[4].myTask = status;
+    taskManager[5].myTask = schedule;
     while(TRUE)
     {
-      for(i = 9; i >= 0; i--){
-        print(i + '0',9-i, 1,&locPrintDelay);
-      }
-      for (i = 0; i < 10; i++){
-        print(' ', i, 1,&locDelDelay);
-      } 
+      
     }
 }
 //Measure, Compute, Display, Annunciate, Status, Schedule
 void measure(){
-  //
+  RIT128x96x4StringDraw("MEASURE RUNNING", 0, 0, 15);
 }
 
 void compute(){
+  RIT128x96x4StringDraw("COMPUTE RUNNING", 0, 0, 15);
   //
 }
 
 void display(){
+  RIT128x96x4StringDraw("DISPLAY RUNNING", 0, 0, 15);
   //
 }
 
 void annunciate(){
+  RIT128x96x4StringDraw("ANNUNCIATE RUNNING", 0, 0, 15);
   //
 }
 
 void status(){
+  RIT128x96x4StringDraw("STATUS RUNNING", 0, 0, 15);
   //
 }
 
 void schedule(){
+  RIT128x96x4StringDraw("SCHEDULE RUNNING", 0, 0, 15);
   //
 }
 
