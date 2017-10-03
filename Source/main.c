@@ -39,7 +39,6 @@ struct Measurements{
   unsigned int temp;
   unsigned int sysPress;
   unsigned int diaPress;
-
   unsigned int heartRate;
 };typedef struct Measurements Measurements;
 
@@ -75,7 +74,8 @@ void display();
 void annunciate();
 void status();
 void schedule();
-void fillStructs(Measurements* m, Display* d, Status* s, Warning* w, Alarms* a);
+void fillStructs(Measurements* m, Display* d, Status* s, 
+                 Warning* w, Alarms* a);
 
 //*****************************************************************************
 //
@@ -85,6 +85,14 @@ void fillStructs(Measurements* m, Display* d, Status* s, Warning* w, Alarms* a);
 
 int main(void)
 {
+  //intitial data
+    Measurements measurementData;
+    Display displayData;
+    Status statusData;
+    Warning warningData;
+    Alarms alarmData;
+    fillStructs(&measurementData, &displayData, &statusData, 
+                &warningData, &alarmData);
     
     volatile int i = 0;
     RIT128x96x4Init(1000000);
@@ -151,5 +159,28 @@ void print(char* c, int hOffset, int vOffset){// string, column, row
 }
 
 void fillStructs(Measurements* m, Display* d, Status* s, Warning* w, Alarms* a){
-  //
+  //fill measurements
+  m->temp = 75;
+  m->sysPress = 80;
+  m->diaPress = 80;
+  m->heartRate = 50;
+
+  //fill display
+  d->temp = NULL;
+  d->sysPress = NULL;
+  d->diaPress = NULL;
+  d->heartRate = NULL;
+  
+  //fill status
+  s->batteryState = 200;
+  
+  //fill warning
+  w->bpOOR = '0';
+  w->pressOOR = '0';
+  w->tempOOR = '0';
+  
+  //fill alarms
+  a->bpHigh = FALSE;
+  a->tempHigh = FALSE;
+  a->pulseLow = FALSE;
 }
