@@ -156,10 +156,11 @@ void measure(void* data){
     }
   }
 
-  //systolic/diatolic pressure 
+  //systolic/diatolic pressure NEED CONFIRMATION!!!
   if( ((Measurements*)data)->sysComplete == FALSE){   //run systolic
     if( ((Measurements*)data)->sysPress > 100){       //systolic complete
       ((Measurements*)data)->sysComplete = TRUE;      //run diatolic
+      ((Measurements*)data)->sysPress = 80;           //rest systolic
       /*if(i%2 == 0){                                   //even tick
         ((Measurements*)data)->diaPress += 2;
       }else{                                          //odd tick
@@ -175,6 +176,7 @@ void measure(void* data){
   }else{                                              //run diatolic
     if( ((Measurements*)data)->sysPress < 40){        //diatolic complete
       ((Measurements*)data)->sysComplete = FALSE;     //run systolic
+      ((Measurements*)data)->diaPress = 80;           //reset diatolic
       /*if(i%2 == 0){                                   //even tick
         ((Measurements*)data)->sysPress += 2;
       }else{                                          //odd tick
