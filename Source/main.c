@@ -47,10 +47,45 @@ struct MyStruct{
   void* taskDataPtr;
 };typedef struct MyStruct TCB;
 
+struct Measurements{
+  unsigned int temp;
+  unsigned int sysPress;
+  unsigned int diaPress;
+
+  unsigned int heartRate;
+};
+typedef struct Measurements Measurements;
+
+struct Display{
+  unsigned char* temp;
+  unsigned char* sysPress;
+  unsigned char* diaPress;
+
+  unsigned char* heartRate;
+};
+typedef struct Display Display;
+
+struct Status{
+  unsigned short batteryState;
+};typedef struct Status Status;
+
+struct Warning{
+  unsigned char bpOOR;
+  unsigned char pressOOR;
+  unsigned char tempOOR;
+
+};typedef struct Warning Warning;
+
+struct Alarms{
+  int bpHigh;
+  int tempHigh;
+  int pulseLow;
+
+};typedef struct Alarms Alarms;
+
 int main(void)
 {
-
-    //  define some local variables
+     //  define some local variables
     volatile int i = 0;
     RIT128x96x4Init(1000000);
     TCB taskManager[6];
