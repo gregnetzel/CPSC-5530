@@ -29,19 +29,6 @@
 #define hSpacing 8
 #define vSpacing 14
 
-void delay(unsigned long aValue);
-void print(char* c, int hOffset, int vOffset);
-void measure();
-void compute();
-void display();
-void annunciate();
-void status();
-void schedule();
-//*****************************************************************************
-//
-// Print "0123456789" 
-//
-//*****************************************************************************
 
 struct MyStruct{
   void (*myTask)(void*);
@@ -54,17 +41,14 @@ struct Measurements{
   unsigned int diaPress;
 
   unsigned int heartRate;
-};
-typedef struct Measurements Measurements;
+};typedef struct Measurements Measurements;
 
 struct Display{
   unsigned char* temp;
   unsigned char* sysPress;
   unsigned char* diaPress;
-
   unsigned char* heartRate;
-};
-typedef struct Display Display;
+};typedef struct Display Display;
 
 struct Status{
   unsigned short batteryState;
@@ -81,11 +65,27 @@ struct Alarms{
   int bpHigh;
   int tempHigh;
   int pulseLow;
-
 };typedef struct Alarms Alarms;
+
+void delay(unsigned long aValue);
+void print(char* c, int hOffset, int vOffset);
+void measure();
+void compute();
+void display();
+void annunciate();
+void status();
+void schedule();
+void fillStructs(Measurements* m, Display* d, Status* s, Warning* w, Alarms* a);
+
+//*****************************************************************************
+//
+// DESCRIPTION
+//
+//*****************************************************************************
 
 int main(void)
 {
+    
     volatile int i = 0;
     RIT128x96x4Init(1000000);
     TCB taskManager[6];
@@ -148,4 +148,8 @@ void delay(unsigned long aValue){
 
 void print(char* c, int hOffset, int vOffset){// string, column, row
   RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
+}
+
+void fillStructs(Measurements* m, Display* d, Status* s, Warning* w, Alarms* a){
+  //
 }
