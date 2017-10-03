@@ -226,9 +226,15 @@ void measure(void* data){
   
 }
 
-void compute(){
+void compute(void* raw, void* calc){
   print("COMPUTE RUNNING", 0, 1);
-  //
+  //((Measurements*)raw)->member ((Display*)calc)->member
+  
+  // may need type conversion???
+  *((Display*)calc)->temp = (5 + (0.75*((Measurements*)raw)->temp));
+  *((Display*)calc)->sysPress = (9 + (2*((Measurements*)raw)->sysPress));
+  *((Display*)calc)->diaPress = (6 + (1.5*((Measurements*)raw)->diaPress));
+  *((Display*)calc)->heartRate = (8 + (3*((Measurements*)raw)->diaPress));
 }
 
 void display(){
