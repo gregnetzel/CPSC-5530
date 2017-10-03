@@ -23,13 +23,14 @@
 //*****************************************************************************
 
 #include <stdio.h>
+#include "drivers/rit128x96x4.h"
 #define TRUE 1
 #define FALSE 0
 #define hSpacing 8
-#define vSpacing 12
+#define vSpacing 14
 
-void delay(unsigned long* aValue);
-void print(char c, int hOffset, int vOffset, unsigned long* delay1);
+void delay(unsigned long aValue);
+void print(char c, int hOffset, int vOffset, unsigned long delay1);
 void measure();
 void compute();
 void display();
@@ -47,9 +48,9 @@ struct MyStruct{
   void* taskDataPtr;
 };typedef struct MyStruct TCB;
 
+const int NUMTASKS = 6;
 int main(void)
 {
-
     //  define some local variables
     volatile int i = 0;
     RIT128x96x4Init(1000000);
@@ -62,49 +63,55 @@ int main(void)
     taskManager[5].myTask = schedule;
     while(TRUE)
     {
-      
+      taskManager[0].myTask(NULL);
+      taskManager[1].myTask(NULL);
+      taskManager[2].myTask(NULL); 
+      taskManager[3].myTask(NULL);
+      taskManager[4].myTask(NULL);
+      taskManager[5].myTask(NULL);
     }
 }
 //Measure, Compute, Display, Annunciate, Status, Schedule
 void measure(){
   RIT128x96x4StringDraw("MEASURE RUNNING", 0, 0, 15);
+  delay(10);
 }
 
 void compute(){
-  RIT128x96x4StringDraw("COMPUTE RUNNING", 0, 0, 15);
+  RIT128x96x4StringDraw("COMPUTE RUNNING", 0, 1*vSpacing, 15);
   //
 }
 
 void display(){
-  RIT128x96x4StringDraw("DISPLAY RUNNING", 0, 0, 15);
+  RIT128x96x4StringDraw("DISPLAY RUNNING", 0, 2*vSpacing, 15);
   //
 }
 
 void annunciate(){
-  RIT128x96x4StringDraw("ANNUNCIATE RUNNING", 0, 0, 15);
+  RIT128x96x4StringDraw("ANNUNCIATE RUNNING", 0, 3*vSpacing, 15);
   //
 }
 
 void status(){
-  RIT128x96x4StringDraw("STATUS RUNNING", 0, 0, 15);
+  RIT128x96x4StringDraw("STATUS RUNNING", 0, 4*vSpacing, 15);
   //
 }
 
 void schedule(){
-  RIT128x96x4StringDraw("SCHEDULE RUNNING", 0, 0, 15);
+  RIT128x96x4StringDraw("SCHEDULE RUNNING", 0, 5*vSpacing, 15);
   //
 }
 
-void delay(unsigned long* aValue){
+void delay(unsigned long aValue){
     volatile unsigned long i = 0;
     volatile int j = 0;
-    for (i = *aValue; i > 0; i--){
+    for (i = aValue; i > 0; i--){
         for (j = 0; j < 100000; j++);
     }
     return;
 }
 
-void print(char c, int hOffset, int vOffset, unsigned long* delay1){
+void print(char c, int hOffset, int vOffset, unsigned long delay1){
   char myData[3];
   myData[0] = c;              
   myData[1] = '\0';

@@ -49,6 +49,7 @@
       <file>$PROJ_DIR$\..\..\..\inc\hw_types.h</file>
       <file>$TOOLKIT_DIR$\inc\stdio.h</file>
       <file>$PROJ_DIR$\Source\fPrint.c</file>
+      <file>$PROJ_DIR$\..\hello\hello.c</file>
     </outputs>
     <file>
       <name>$PROJ_DIR$\Source\main.c</name>
@@ -65,11 +66,11 @@
       <inputs>
         <tool>
           <name>ICCARM</name>
-          <file> 41 39 31 21 24 19 14 20 29</file>
+          <file> 41 39 31 21 24 19 14 20 29 15</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 41 39 31 21 19 14 20 29</file>
+          <file> 41 39 31 21 19 14 20 29 15</file>
         </tool>
       </inputs>
     </file>
