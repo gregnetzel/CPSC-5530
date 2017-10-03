@@ -28,11 +28,14 @@
 #define hSpacing 8
 #define vSpacing 12
 
-//void delay(unsigned long* aValue);
-//void f1Data(unsigned long* delay1);
-//void f2Clear(unsigned long* delay2);
-//void fPrint(char c, int offset, unsigned long* delay1);
-
+void delay(unsigned long* aValue);
+void print(char c, int hOffset, int vOffset, unsigned long* delay1);
+void measure();
+void compute();
+void display();
+void annunciate();
+void status();
+void schedule();
 //*****************************************************************************
 //
 // Print "0123456789" 
@@ -57,37 +60,51 @@ int main(void)
     while(TRUE)
     {
       for(i = 9; i >= 0; i--){
-        fPrint(i + '0',9-i,&locPrintDelay);
+        print(i + '0',9-i, 1,&locPrintDelay);
       }
       for (i = 0; i < 10; i++){
-        fPrint(' ',i,&locPrintDelay);
-      }
-      //f1Data(&locPrintDelay);
-      //f2Clear(&locDelDelay);      
+        print(' ', i, 1,&locDelDelay);
+      } 
     }
-
+}
+//Measure, Compute, Display, Annunciate, Status, Schedule
+void measure(){
+  //
 }
 
-//void f1Data(unsigned long* delay1){
-//  char myData[3];
-//  for (int i = 9; i >=0; i--)
-//  {
-//    myData[0] = i + '0';        //  convert the int i to ascii
-//    myData[1] = '\0';           //  terminate the string
-//    RIT128x96x4StringDraw(myData, hSpacing*(9-i), vSpacing, 15);
-//    delay(delay1);          //  delay so we can read the display
-//  }
-//}
-//void f2Clear(unsigned long* delay1){
-//  char myData[3];
-//  myData[0] = ' ';              //  print a space
-//  myData[1] = '\0';
-//
-//  //  clear the line
-//
-//      for (int i = 0; i < 10; i++)
-//      {
-//        RIT128x96x4StringDraw(myData,hSpacing*i, vSpacing, 15);
-//        delay(delay1);
-//      }
-//}
+void compute(){
+  //
+}
+
+void display(){
+  //
+}
+
+void annunciate(){
+  //
+}
+
+void status(){
+  //
+}
+
+void schedule(){
+  //
+}
+
+void delay(unsigned long* aValue){
+    volatile unsigned long i = 0;
+    volatile int j = 0;
+    for (i = *aValue; i > 0; i--){
+        for (j = 0; j < 100000; j++);
+    }
+    return;
+}
+
+void print(char c, int hOffset, int vOffset, unsigned long* delay1){
+  char myData[3];
+  myData[0] = c;              
+  myData[1] = '\0';
+  RIT128x96x4StringDraw(myData, hSpacing*(hOffset), vSpacing*(vOffset), 15);
+  delay(delay1);
+}

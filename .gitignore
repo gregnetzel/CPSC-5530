@@ -53,3 +53,4 @@ dkms.conf
 *.ini
 *.pbd
 *.pbi
+*.bat

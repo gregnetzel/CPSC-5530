@@ -1632,9 +1632,6 @@
     <name>$PROJ_DIR$\driverlib.a</name>
   </file>
   <file>
-    <name>$PROJ_DIR$\Source\fPrint.c</name>
-  </file>
-  <file>
     <name>$PROJ_DIR$\Source\main.c</name>
   </file>
   <file>
