@@ -40,6 +40,10 @@ struct Measurements{
   unsigned int sysPress;
   unsigned int diaPress;
   unsigned int heartRate;
+  int reverseTemp;
+  int sysComplete;
+  int diaComplete;
+  int reversePulse;
 };typedef struct Measurements Measurements;
 
 struct Display{
@@ -68,7 +72,7 @@ struct Alarms{
 
 void delay(unsigned long aValue);
 void print(char* c, int hOffset, int vOffset);
-void measure();
+void measure(void* data);
 void compute();
 void display();
 void annunciate();
@@ -91,6 +95,7 @@ int main(void)
     Status statusData;
     Warning warningData;
     Alarms alarmData;
+    
     fillStructs(&measurementData, &displayData, &statusData, 
                 &warningData, &alarmData);
     
@@ -105,7 +110,7 @@ int main(void)
     taskManager[5].myTask = schedule;
     while(TRUE)
     {
-      taskManager[0].myTask(NULL);
+      taskManager[0].myTask(&measurementData);
       taskManager[1].myTask(NULL);
       taskManager[2].myTask(NULL); 
       taskManager[3].myTask(NULL);
@@ -115,9 +120,52 @@ int main(void)
     }
 }
 //Measure, Compute, Display, Annunciate, Status, Schedule
-void measure(){
+void measure(void* data){
   print("MEASURE RUNNING", 0, 0);
-  //
+  /* Access Data: ((type*)data)->member */
+  
+  //temperature 
+  if(((Measurements*)data)->reverseTemp == FALSE){    //increasing pattern
+    if( ((Measurements*)data)->temp > 50){
+      ((Measurements*)data)->reverseTemp = TRUE;      //reverse pattern
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->temp -= 2;
+      }else{                                          //odd tick
+        ((Measurements*)data)->temp += 1;
+      }*/
+    }else{
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->temp += 2;
+      }else{                                          //odd tick
+        ((Measurements*)data)->temp -= 1;
+      }*/
+    }
+  }else{                                              //decreasing pattern
+    if( ((Measurements*)data)->temp < 15){
+      ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->temp += 2;
+      }else{                                          //odd tick
+        ((Measurements*)data)->temp -= 1;
+      }*/
+    }else{
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->temp -= 2;
+      }else{                                          //odd tick
+        ((Measurements*)data)->temp += 1;
+      }*/
+    }
+  }
+
+  //systolic pressure 
+  
+  
+  //diatolic pressure
+  
+  
+  //heartrate
+  
+  
 }
 
 void compute(){
@@ -164,6 +212,10 @@ void fillStructs(Measurements* m, Display* d, Status* s, Warning* w, Alarms* a){
   m->sysPress = 80;
   m->diaPress = 80;
   m->heartRate = 50;
+  m->reverseTemp = FALSE;
+  m->sysComplete = FALSE;
+  m->diaComplete = FALSE;
+  m->reversePulse = FALSE;
 
   //fill display
   d->temp = NULL;
