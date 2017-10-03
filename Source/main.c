@@ -86,11 +86,6 @@ struct Alarms{
 
 int main(void)
 {
-<<<<<<< HEAD
-    //  define some local variables
-=======
-     //  define some local variables
->>>>>>> origin/master
     volatile int i = 0;
     RIT128x96x4Init(1000000);
     TCB taskManager[6];
