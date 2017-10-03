@@ -30,7 +30,7 @@
 #define vSpacing 14
 
 void delay(unsigned long aValue);
-void print(char c, int hOffset, int vOffset, unsigned long delay1);
+void print(char* c, int hOffset, int vOffset);
 void measure();
 void compute();
 void display();
@@ -48,7 +48,6 @@ struct MyStruct{
   void* taskDataPtr;
 };typedef struct MyStruct TCB;
 
-const int NUMTASKS = 6;
 int main(void)
 {
     //  define some local variables
@@ -69,37 +68,38 @@ int main(void)
       taskManager[3].myTask(NULL);
       taskManager[4].myTask(NULL);
       taskManager[5].myTask(NULL);
+      delay(100);
     }
 }
 //Measure, Compute, Display, Annunciate, Status, Schedule
 void measure(){
-  RIT128x96x4StringDraw("MEASURE RUNNING", 0, 0, 15);
-  delay(10);
+  print("MEASURE RUNNING", 0, 0);
+  //
 }
 
 void compute(){
-  RIT128x96x4StringDraw("COMPUTE RUNNING", 0, 1*vSpacing, 15);
+  print("COMPUTE RUNNING", 0, 1);
   //
 }
 
 void display(){
-  RIT128x96x4StringDraw("DISPLAY RUNNING", 0, 2*vSpacing, 15);
+  print("DISPLAY RUNNING", 0, 2);
   //
 }
 
 void annunciate(){
-  RIT128x96x4StringDraw("ANNUNCIATE RUNNING", 0, 3*vSpacing, 15);
+  print("ANNUNCIATE RUNNING", 0, 3);
   //
 }
 
 void status(){
-  RIT128x96x4StringDraw("STATUS RUNNING", 0, 4*vSpacing, 15);
+  print("STATUS RUNNING", 0, 4);
   //
 }
 
 void schedule(){
-  RIT128x96x4StringDraw("SCHEDULE RUNNING", 0, 5*vSpacing, 15);
-  //
+  print("SCHEDULE RUNNING", 0, 5);
+  delay(10);
 }
 
 void delay(unsigned long aValue){
@@ -111,10 +111,6 @@ void delay(unsigned long aValue){
     return;
 }
 
-void print(char c, int hOffset, int vOffset, unsigned long delay1){
-  char myData[3];
-  myData[0] = c;              
-  myData[1] = '\0';
-  RIT128x96x4StringDraw(myData, hSpacing*(hOffset), vSpacing*(vOffset), 15);
-  delay(delay1);
+void print(char* c, int hOffset, int vOffset){// string, column, row
+  RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
 }
