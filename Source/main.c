@@ -42,7 +42,6 @@ struct Measurements{
   unsigned int heartRate;
   int reverseTemp;
   int sysComplete;
-  int diaComplete;
   int reversePulse;
 };typedef struct Measurements Measurements;
 
@@ -157,11 +156,38 @@ void measure(void* data){
     }
   }
 
-  //systolic pressure 
-  
-  
-  //diatolic pressure
-  
+  //systolic/diatolic pressure 
+  if( ((Measurements*)data)->sysComplete == FALSE){   //run systolic
+    if( ((Measurements*)data)->sysPress > 100){       //systolic complete
+      ((Measurements*)data)->sysComplete = TRUE;      //run diatolic
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->diaPress += 2;
+      }else{                                          //odd tick
+        ((Measurements*)data)->diaPress -= 1;
+      }*/
+    }else{
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->sysPress += 2;
+      }else{                                          //odd tick
+        ((Measurements*)data)->sysPress -= 1;
+      }*/
+    }
+  }else{                                              //run diatolic
+    if( ((Measurements*)data)->sysPress < 40){        //diatolic complete
+      ((Measurements*)data)->sysComplete = FALSE;     //run systolic
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->sysPress += 2;
+      }else{                                          //odd tick
+        ((Measurements*)data)->sysPress -= 1;
+      }*/
+    }else{                                            
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->diaPress += 2;
+      }else{                                          //odd tick
+        ((Measurements*)data)->diaPress -= 1;
+      }*/
+    }
+  }
   
   //heartrate
   
@@ -214,7 +240,6 @@ void fillStructs(Measurements* m, Display* d, Status* s, Warning* w, Alarms* a){
   m->heartRate = 50;
   m->reverseTemp = FALSE;
   m->sysComplete = FALSE;
-  m->diaComplete = FALSE;
   m->reversePulse = FALSE;
 
   //fill display
