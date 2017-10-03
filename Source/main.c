@@ -190,7 +190,37 @@ void measure(void* data){
   }
   
   //heartrate
-  
+  if(((Measurements*)data)->reversePulse == FALSE){    //increasing pattern
+    if( ((Measurements*)data)->heartRate > 40){
+      ((Measurements*)data)->reversePulse = TRUE;      //reverse pattern
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->temp += 1;
+      }else{                                          //odd tick
+        ((Measurements*)data)->temp -= 3;
+      }*/
+    }else{
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->temp -= 1;
+      }else{                                          //odd tick
+        ((Measurements*)data)->temp += 3;
+      }*/
+    }
+  }else{                                              //decreasing pattern
+    if( ((Measurements*)data)->heartRate < 15){
+      ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->temp -= 1;
+      }else{                                          //odd tick
+        ((Measurements*)data)->temp += 3;
+      }*/
+    }else{
+      /*if(i%2 == 0){                                   //even tick
+        ((Measurements*)data)->temp += 1;
+      }else{                                          //odd tick
+        ((Measurements*)data)->temp -= 3;
+      }*/
+    }
+  }
   
 }
 
