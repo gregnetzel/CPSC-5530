@@ -257,14 +257,24 @@ void measure(void* data){
 void compute(void* data){
   print("COMPUTE RUNNING", 0, 1);
   //((Measurements*)raw)->member ((Display*)calc)->member
+  float t = (float)*(((ComputeData*)data)->tempRaw);
+  unsigned int s = *(((ComputeData*)data)->sysPressRaw);
+  float d = (float)*(((ComputeData*)data)->diaPressRaw);
+  unsigned int h = *(((ComputeData*)data)->heartRateRaw);
   
-  // may need type conversion???
-  /*
-  *((Display*)calc)->temp = (5 + (0.75*((Measurements*)raw)->temp));
-  *((Display*)calc)->sysPress = (9 + (2*((Measurements*)raw)->sysPress));
-  *((Display*)calc)->diaPress = (6 + (1.5*((Measurements*)raw)->diaPress));
-  *((Display*)calc)->heartRate = (8 + (3*((Measurements*)raw)->diaPress));
-  */
+  t = 5 + (0.75*t);
+  s = 9 + (2*s);
+  d = 6 + (1.5*d);
+  h = 8 + (3*h);
+
+  
+/*
+  sprintf(((ComputeData*)data)->tempCorrected, "%d", t);
+  *((ComputeData*)data)->tempCorrected
+  *((ComputeData*)data)->sysPressCorrected
+  *((ComputeData*)data)->diaPressCorrected 
+  *((ComputeData*)data)->heartRateCorrected
+   */
 }
 
 void display(void* data){
