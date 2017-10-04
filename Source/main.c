@@ -282,23 +282,24 @@ void compute(void* data){
 
 void display(void* data){
   //print("DISPLAY RUNNING", 0, 2);
-  //
+  
   print("???",0,0);                //Systolic: should never be over 3 char
   print("/",3,0);
-  print("???.?",4,0);                //Diatolic: should never be over 5 char (float)
+  print("???.?",4,0);              //Diatolic: should never be over 5 char (float)
   print("mm Hg",9,0);
   
-  print("??.?",0,1);                //Temperature: should never be over 4 char (float)
+  print("??.?",0,1);               //Temperature: should never be over 4 char (float)
   print("C",3,1);
-  print("???",5,1);                 //Heartrate: should never be over 3 char
+  print("???",5,1);                //Heartrate: should never be over 3 char
   print("BPM",8,1);
-  print("???",13,1);                //battery: should never be over 3 char
+  print("???",13,1);               //battery: should never be over 3 char
 
 }
 
 void annunciate(void* data){
   //print("ANNUNCIATE RUNNING", 0, 3);
-  //
+  
+  
 }
 
 void status(void* data){
