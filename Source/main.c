@@ -293,14 +293,41 @@ void display(void* data){
   print("???",5,1);                //Heartrate: should never be over 3 char
   print("BPM",8,1);
   print("???",13,1);               //battery: should never be over 3 char
-
 }
 
 void annunciate(void* data){
   //print("ANNUNCIATE RUNNING", 0, 3);
+  //*((WarningAlarm*)data)->member
+
+  float t = (float)*(((WarningAlarm*)data)->temp);
+  unsigned int s = *(((WarningAlarm*)data)->sysPress);
+  float d = (float)*(((WarningAlarm*)data)->diaPress);
+  unsigned int h = *(((WarningAlarm*)data)->heartRate);
+  short b = *(((WarningAlarm*)data)->batteryState);
   
+  t = 5 + (0.75*t);
+  s = 9 + (2*s);
+  d = 6 + (1.5*d);
+  h = 8 + (3*h);
+  
+  if(b < 40){
+    //no instructions given
+  }
+  
+  if(t > 37.8 || t < 36.1){
+    //flash light at 1 second interval
+  }
+  
+  if(h > 100 || h < 60){
+    //flash light at 2 second interval
+  }
+  
+  if(s > 120 || s < 90 || d > 80 || d < 60){
+    //flash light at 0.5 second interval
+  }
   
 }
+
 
 void status(void* data){
   //print("STATUS RUNNING", 0, 4);

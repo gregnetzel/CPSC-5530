@@ -128,10 +128,6 @@
           <name>BICOMP</name>
           <file> 33</file>
         </tool>
-        <tool>
-          <name>ICCARM</name>
-          <file> 20</file>
-        </tool>
       </outputs>
       <inputs>
         <tool>
