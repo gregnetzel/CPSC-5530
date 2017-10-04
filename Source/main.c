@@ -155,7 +155,7 @@ int main(void)
 }
 //Measure, Compute, Display, Annunciate, Status, Schedule
 void measure(void* data){
-  print("MEASURE RUNNING", 0, 0);
+  //print("MEASURE RUNNING", 0, 0);
   /* Access Data: ((type*)data)->member */
   
   //temperature 
@@ -262,7 +262,7 @@ void measure(void* data){
 }
 
 void compute(void* data){
-  print("COMPUTE RUNNING", 0, 1);
+  //print("COMPUTE RUNNING", 0, 1);
 
   float t = (float)*(((ComputeData*)data)->tempRaw);
   unsigned int s = *(((ComputeData*)data)->sysPressRaw);
@@ -281,22 +281,33 @@ void compute(void* data){
 }
 
 void display(void* data){
-  print("DISPLAY RUNNING", 0, 2);
+  //print("DISPLAY RUNNING", 0, 2);
   //
+  print("???",0,0);                //Systolic: should never be over 3 char
+  print("/",3,0);
+  print("???.?",4,0);                //Diatolic: should never be over 5 char (float)
+  print("mm Hg",9,0);
+  
+  print("??.?",0,1);                //Temperature: should never be over 4 char (float)
+  print("C",3,1);
+  print("???",5,1);                 //Heartrate: should never be over 3 char
+  print("BPM",8,1);
+  print("???",13,1);                //battery: should never be over 3 char
+
 }
 
 void annunciate(void* data){
-  print("ANNUNCIATE RUNNING", 0, 3);
+  //print("ANNUNCIATE RUNNING", 0, 3);
   //
 }
 
 void status(void* data){
-  print("STATUS RUNNING", 0, 4);
+  //print("STATUS RUNNING", 0, 4);
   ((Status*)data)->batteryState --;              //decrement battery by 1
 }
 
 void schedule(void* data){
-  print("SCHEDULE RUNNING", 0, 5);
+  //print("SCHEDULE RUNNING", 0, 5);
   delay(10);
 }
 
