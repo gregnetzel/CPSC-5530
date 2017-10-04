@@ -29,56 +29,84 @@
 #define hSpacing 8
 #define vSpacing 14
 
+//Data Variables
+unsigned int tempRaw = 70;
+unsigned int sysPressRaw = 80;
+unsigned int diaPressRaw = 80;
+unsigned int heartRateRaw = 50;
 
+unsigned char* tempCorrected = NULL;
+unsigned char* sysPressCorrected = NULL;
+unsigned char* diaPressCorrected = NULL;
+unsigned char* heartRateCorrected = NULL;
+
+unsigned short batteryState = 200;
+
+unsigned char bpOOR = '0';
+unsigned char pressOOR = '0';
+unsigned char tempOOR = '0';
+
+int bpHigh = FALSE;
+int tempHigh = FALSE;
+int pulseLow = FALSE;
+
+//Structs
 struct MyStruct{
   void (*myTask)(void*);
   void* taskDataPtr;
 };typedef struct MyStruct TCB;
 
 struct Measurements{
-  unsigned int temp;
-  unsigned int sysPress;
-  unsigned int diaPress;
-  unsigned int heartRate;
+  unsigned int* temp;
+  unsigned int* sysPress;
+  unsigned int* diaPress;
+  unsigned int* heartRate;
   int reverseTemp;
   int sysComplete;
   int reversePulse;
 };typedef struct Measurements Measurements;
 
+struct ComputeData{
+  unsigned int* tempRaw;
+  unsigned int* sysPressRaw;
+  unsigned int* diaPressRaw;
+  unsigned int* heartRateRaw;
+  unsigned char** tempCorrected;
+  unsigned char** sysPressCorrected;
+  unsigned char** diaPressCorrected;
+  unsigned char** heartRateCorrected;
+};typedef struct ComputeData ComputeData;
+
 struct Display{
-  unsigned char* temp;
-  unsigned char* sysPress;
-  unsigned char* diaPress;
-  unsigned char* heartRate;
+  unsigned char** temp;
+  unsigned char** sysPress;
+  unsigned char** diaPress;
+  unsigned char** heartRate;
 };typedef struct Display Display;
 
 struct Status{
-  unsigned short batteryState;
+  unsigned short* batteryState;
 };typedef struct Status Status;
 
-struct Warning{
-  unsigned char bpOOR;
-  unsigned char pressOOR;
-  unsigned char tempOOR;
+struct WarningAlarm{
+  unsigned int* temp;
+  unsigned int* sysPress;
+  unsigned int* diaPress;
+  unsigned int* heartRate;
+  unsigned short* batteryState;
+};typedef struct WarningAlarm WarningAlarm;
 
-};typedef struct Warning Warning;
-
-struct Alarms{
-  int bpHigh;
-  int tempHigh;
-  int pulseLow;
-};typedef struct Alarms Alarms;
-
+//functions
 void delay(unsigned long aValue);
 void print(char* c, int hOffset, int vOffset);
 void measure(void* data);
-void compute();
-void display();
-void annunciate();
-void status();
-void schedule();
-void fillStructs(Measurements* m, Display* d, Status* s, 
-                 Warning* w, Alarms* a);
+void compute(void* data);
+void display(void* data);
+void annunciate(void* data);
+void status(void* data);
+void schedule(void* data);
+void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, 
+                 WarningAlarm* w);
 
 //*****************************************************************************
 //
@@ -90,13 +118,13 @@ int main(void)
 {
   //intitial data
     Measurements measurementData;
+    ComputeData computeData;
     Display displayData;
     Status statusData;
-    Warning warningData;
-    Alarms alarmData;
+    WarningAlarm warningAlarmData;
     
-    fillStructs(&measurementData, &displayData, &statusData, 
-                &warningData, &alarmData);
+    fillStructs(&measurementData, &computeData, &displayData, &statusData, 
+                &warningAlarmData);
     
     volatile int i = 0;
     RIT128x96x4Init(1000000);
@@ -113,7 +141,7 @@ int main(void)
       taskManager[1].myTask(NULL);
       taskManager[2].myTask(NULL); 
       taskManager[3].myTask(NULL);
-      taskManager[4].myTask(NULL);
+      taskManager[4].myTask(&statusData);
       taskManager[5].myTask(NULL);
       delay(100);
     }
@@ -125,7 +153,7 @@ void measure(void* data){
   
   //temperature 
   if(((Measurements*)data)->reverseTemp == FALSE){    //increasing pattern
-    if( ((Measurements*)data)->temp > 50){
+    if( *((Measurements*)data)->temp > 50){
       ((Measurements*)data)->reverseTemp = TRUE;      //reverse pattern
       /*if(i%2 == 0){                                   //even tick
         ((Measurements*)data)->temp -= 2;
@@ -140,7 +168,7 @@ void measure(void* data){
       }*/
     }
   }else{                                              //decreasing pattern
-    if( ((Measurements*)data)->temp < 15){
+    if( *((Measurements*)data)->temp < 15){
       ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
       /*if(i%2 == 0){                                   //even tick
         ((Measurements*)data)->temp += 2;
@@ -158,9 +186,9 @@ void measure(void* data){
 
   //systolic/diatolic pressure NEED CONFIRMATION!!!
   if( ((Measurements*)data)->sysComplete == FALSE){   //run systolic
-    if( ((Measurements*)data)->sysPress > 100){       //systolic complete
+    if( *((Measurements*)data)->sysPress > 100){       //systolic complete
       ((Measurements*)data)->sysComplete = TRUE;      //run diatolic
-      ((Measurements*)data)->sysPress = 80;           //rest systolic
+      *((Measurements*)data)->sysPress = 80;           //rest systolic
       /*if(i%2 == 0){                                   //even tick
         ((Measurements*)data)->diaPress += 2;
       }else{                                          //odd tick
@@ -174,9 +202,9 @@ void measure(void* data){
       }*/
     }
   }else{                                              //run diatolic
-    if( ((Measurements*)data)->sysPress < 40){        //diatolic complete
+    if( *((Measurements*)data)->sysPress < 40){        //diatolic complete
       ((Measurements*)data)->sysComplete = FALSE;     //run systolic
-      ((Measurements*)data)->diaPress = 80;           //reset diatolic
+      *((Measurements*)data)->diaPress = 80;           //reset diatolic
       /*if(i%2 == 0){                                   //even tick
         ((Measurements*)data)->sysPress += 2;
       }else{                                          //odd tick
@@ -193,7 +221,7 @@ void measure(void* data){
   
   //heartrate
   if(((Measurements*)data)->reversePulse == FALSE){    //increasing pattern
-    if( ((Measurements*)data)->heartRate > 40){
+    if( *((Measurements*)data)->heartRate > 40){
       ((Measurements*)data)->reversePulse = TRUE;      //reverse pattern
       /*if(i%2 == 0){                                   //even tick
         ((Measurements*)data)->temp += 1;
@@ -208,7 +236,7 @@ void measure(void* data){
       }*/
     }
   }else{                                              //decreasing pattern
-    if( ((Measurements*)data)->heartRate < 15){
+    if( *((Measurements*)data)->heartRate < 15){
       ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
       /*if(i%2 == 0){                                   //even tick
         ((Measurements*)data)->temp -= 1;
@@ -226,33 +254,35 @@ void measure(void* data){
   
 }
 
-void compute(void* raw, void* calc){
+void compute(void* data){
   print("COMPUTE RUNNING", 0, 1);
   //((Measurements*)raw)->member ((Display*)calc)->member
   
   // may need type conversion???
+  /*
   *((Display*)calc)->temp = (5 + (0.75*((Measurements*)raw)->temp));
   *((Display*)calc)->sysPress = (9 + (2*((Measurements*)raw)->sysPress));
   *((Display*)calc)->diaPress = (6 + (1.5*((Measurements*)raw)->diaPress));
   *((Display*)calc)->heartRate = (8 + (3*((Measurements*)raw)->diaPress));
+  */
 }
 
-void display(){
+void display(void* data){
   print("DISPLAY RUNNING", 0, 2);
   //
 }
 
-void annunciate(){
+void annunciate(void* data){
   print("ANNUNCIATE RUNNING", 0, 3);
   //
 }
 
-void status(){
+void status(void* data){
   print("STATUS RUNNING", 0, 4);
-  //
+  ((Status*)data)->batteryState --;              //decrement battery by 1
 }
 
-void schedule(){
+void schedule(void* data){
   print("SCHEDULE RUNNING", 0, 5);
   delay(10);
 }
@@ -270,32 +300,38 @@ void print(char* c, int hOffset, int vOffset){// string, column, row
   RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
 }
 
-void fillStructs(Measurements* m, Display* d, Status* s, Warning* w, Alarms* a){
-  //fill measurements
-  m->temp = 75;
-  m->sysPress = 80;
-  m->diaPress = 80;
-  m->heartRate = 50;
+void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, WarningAlarm* w){
+  //measure
+  m->temp = &tempRaw;
+  m->sysPress = &sysPressRaw;
+  m->diaPress = &diaPressRaw;
+  m->heartRate = &heartRateRaw;
   m->reverseTemp = FALSE;
   m->sysComplete = FALSE;
   m->reversePulse = FALSE;
-
-  //fill display
-  d->temp = NULL;
-  d->sysPress = NULL;
-  d->diaPress = NULL;
-  d->heartRate = NULL;
   
-  //fill status
-  s->batteryState = 200;
+  //compute
+  c->tempRaw = &tempRaw;
+  c->sysPressRaw = &sysPressRaw;
+  c->diaPressRaw = &diaPressRaw;
+  c->heartRateRaw = &heartRateRaw;
+  c->tempCorrected = &tempCorrected;
+  c->sysPressCorrected = &sysPressCorrected;
+  c->diaPressCorrected = &diaPressCorrected;
+  c->heartRateCorrected = &heartRateCorrected;
   
-  //fill warning
-  w->bpOOR = '0';
-  w->pressOOR = '0';
-  w->tempOOR = '0';
+  //display
+  d->temp = &tempCorrected;
+  d->sysPress = &sysPressCorrected;
+  d->diaPress = &diaPressCorrected;
+  d->heartRate = &heartRateCorrected;
   
-  //fill alarms
-  a->bpHigh = FALSE;
-  a->tempHigh = FALSE;
-  a->pulseLow = FALSE;
+  //status
+  s->batteryState = &batteryState;
+  
+  //warningAlarm
+  w->temp = &tempRaw;
+  w->sysPress = &sysPressRaw;
+  w->diaPress = &diaPressRaw;
+  w->heartRate = &heartRateRaw;
 }
