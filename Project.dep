@@ -118,6 +118,10 @@
           <name>BICOMP</name>
           <file> 14</file>
         </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 37</file>
+        </tool>
       </outputs>
       <inputs>
         <tool>

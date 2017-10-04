@@ -267,7 +267,10 @@ void compute(void* data){
   d = 6 + (1.5*d);
   h = 8 + (3*h);
 
-  
+  **((ComputeData*)data)->tempCorrected = (int)t;
+  **((ComputeData*)data)->sysPressCorrected = s;
+  **((ComputeData*)data)->diaPressCorrected = (int)d; 
+  **((ComputeData*)data)->heartRateCorrected = h;
 /*
   sprintf(((ComputeData*)data)->tempCorrected, "%d", t);
   *((ComputeData*)data)->tempCorrected
