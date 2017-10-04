@@ -156,30 +156,30 @@ void measure(void* data){
     if( *((Measurements*)data)->temp > 50){
       ((Measurements*)data)->reverseTemp = TRUE;      //reverse pattern
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->temp -= 2;
+        *((Measurements*)data)->temp -= 2;
       }else{                                          //odd tick
-        ((Measurements*)data)->temp += 1;
+        *((Measurements*)data)->temp += 1;
       }*/
     }else{
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->temp += 2;
+        *((Measurements*)data)->temp += 2;
       }else{                                          //odd tick
-        ((Measurements*)data)->temp -= 1;
+        *((Measurements*)data)->temp -= 1;
       }*/
     }
   }else{                                              //decreasing pattern
     if( *((Measurements*)data)->temp < 15){
       ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->temp += 2;
+        *((Measurements*)data)->temp += 2;
       }else{                                          //odd tick
-        ((Measurements*)data)->temp -= 1;
+        *((Measurements*)data)->temp -= 1;
       }*/
     }else{
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->temp -= 2;
+        *((Measurements*)data)->temp -= 2;
       }else{                                          //odd tick
-        ((Measurements*)data)->temp += 1;
+        *((Measurements*)data)->temp += 1;
       }*/
     }
   }
@@ -190,15 +190,15 @@ void measure(void* data){
       ((Measurements*)data)->sysComplete = TRUE;      //run diatolic
       *((Measurements*)data)->sysPress = 80;           //rest systolic
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->diaPress += 2;
+        *((Measurements*)data)->diaPress += 2;
       }else{                                          //odd tick
-        ((Measurements*)data)->diaPress -= 1;
+        *((Measurements*)data)->diaPress -= 1;
       }*/
     }else{
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->sysPress += 2;
+        *((Measurements*)data)->sysPress += 2;
       }else{                                          //odd tick
-        ((Measurements*)data)->sysPress -= 1;
+        *((Measurements*)data)->sysPress -= 1;
       }*/
     }
   }else{                                              //run diatolic
@@ -206,15 +206,15 @@ void measure(void* data){
       ((Measurements*)data)->sysComplete = FALSE;     //run systolic
       *((Measurements*)data)->diaPress = 80;           //reset diatolic
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->sysPress += 2;
+        *((Measurements*)data)->sysPress += 2;
       }else{                                          //odd tick
-        ((Measurements*)data)->sysPress -= 1;
+        *((Measurements*)data)->sysPress -= 1;
       }*/
     }else{                                            
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->diaPress += 2;
+        *((Measurements*)data)->diaPress += 2;
       }else{                                          //odd tick
-        ((Measurements*)data)->diaPress -= 1;
+        *((Measurements*)data)->diaPress -= 1;
       }*/
     }
   }
@@ -224,30 +224,30 @@ void measure(void* data){
     if( *((Measurements*)data)->heartRate > 40){
       ((Measurements*)data)->reversePulse = TRUE;      //reverse pattern
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->temp += 1;
+        *((Measurements*)data)->temp += 1;
       }else{                                          //odd tick
-        ((Measurements*)data)->temp -= 3;
+        *((Measurements*)data)->temp -= 3;
       }*/
     }else{
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->temp -= 1;
+        *((Measurements*)data)->temp -= 1;
       }else{                                          //odd tick
-        ((Measurements*)data)->temp += 3;
+        *((Measurements*)data)->temp += 3;
       }*/
     }
   }else{                                              //decreasing pattern
     if( *((Measurements*)data)->heartRate < 15){
       ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->temp -= 1;
+        *((Measurements*)data)->temp -= 1;
       }else{                                          //odd tick
-        ((Measurements*)data)->temp += 3;
+        *((Measurements*)data)->temp += 3;
       }*/
     }else{
       /*if(i%2 == 0){                                   //even tick
-        ((Measurements*)data)->temp += 1;
+        *((Measurements*)data)->temp += 1;
       }else{                                          //odd tick
-        ((Measurements*)data)->temp -= 3;
+        *((Measurements*)data)->temp -= 3;
       }*/
     }
   }
