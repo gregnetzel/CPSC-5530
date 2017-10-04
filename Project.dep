@@ -45,6 +45,7 @@
       <file>$PROJ_DIR$\Source\main.c</file>
       <file>$PROJ_DIR$\driverlib.a</file>
       <file>$PROJ_DIR$\Source\rit128x96x4.c</file>
+      <file>$TOOLKIT_DIR$\inc\stdlib.h</file>
     </outputs>
     <file>
       <name>[ROOT_NODE]</name>
@@ -128,15 +129,19 @@
           <name>BICOMP</name>
           <file> 33</file>
         </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 20</file>
+        </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 6 19 22 9 25 30 7 21 34</file>
+          <file> 6 19 22 9 25 30 7 21 39 34</file>
         </tool>
         <tool>
           <name>ICCARM</name>
-          <file> 6 19 22 9 3 25 30 7 21 34</file>
+          <file> 6 19 22 9 3 25 30 7 21 39 34</file>
         </tool>
       </inputs>
     </file>

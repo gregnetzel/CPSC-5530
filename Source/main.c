@@ -23,6 +23,7 @@
 //*****************************************************************************
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "drivers/rit128x96x4.h"
 #define TRUE 1
 #define FALSE 0
@@ -155,7 +156,7 @@ int main(void)
 }
 //Measure, Compute, Display, Annunciate, Status, Schedule
 void measure(void* data){
-  //print("MEASURE RUNNING", 0, 0);
+  //print("MEASURE RUNNING", 0, 3);
   /* Access Data: ((type*)data)->member */
   
   //temperature 
@@ -262,27 +263,29 @@ void measure(void* data){
 }
 
 void compute(void* data){
-  //print("COMPUTE RUNNING", 0, 1);
+  //print("COMPUTE RUNNING", 0, 4);
 
   float t = (float)*(((ComputeData*)data)->tempRaw);
   unsigned int s = *(((ComputeData*)data)->sysPressRaw);
   float d = (float)*(((ComputeData*)data)->diaPressRaw);
   unsigned int h = *(((ComputeData*)data)->heartRateRaw);
   
-  t = 5 + (0.75*t);
+  t = (int)(5 + (0.75*t));
   s = 9 + (2*s);
-  d = 6 + (1.5*d);
+  d = (int)(6 + (1.5*d));
   h = 8 + (3*h);
-
-  **((ComputeData*)data)->tempCorrected = (int)t;
-  **((ComputeData*)data)->sysPressCorrected = s;
-  **((ComputeData*)data)->diaPressCorrected = (int)d; 
-  **((ComputeData*)data)->heartRateCorrected = h;
+  /*
+  NOT FINDING stdlib.h
+  itoa(t,*((ComputeData*)data)->tempCorrected,10);
+  itoa(s,*((ComputeData*)data)->sysPressCorrected,10);
+  itoa(d,*((ComputeData*)data)->diaPressCorrected,10); 
+  itoa(h,*((ComputeData*)data)->heartRateCorrected,10);
+  */
 }
 
 void display(void* data){
-  //print("DISPLAY RUNNING", 0, 2);
-  
+  //print("DISPLAY RUNNING", 0, 5);
+
   print("???",0,0);                //Systolic: should never be over 3 char
   print("/",3,0);
   print("???.?",4,0);              //Diatolic: should never be over 5 char (float)
@@ -293,10 +296,11 @@ void display(void* data){
   print("???",5,1);                //Heartrate: should never be over 3 char
   print("BPM",8,1);
   print("???",13,1);               //battery: should never be over 3 char
+
 }
 
 void annunciate(void* data){
-  //print("ANNUNCIATE RUNNING", 0, 3);
+  //print("ANNUNCIATE RUNNING", 0, 6);
   //*((WarningAlarm*)data)->member
 
   float t = (float)*(((WarningAlarm*)data)->temp);
@@ -330,12 +334,12 @@ void annunciate(void* data){
 
 
 void status(void* data){
-  //print("STATUS RUNNING", 0, 4);
+  //print("STATUS RUNNING", 0, 7);
   ((Status*)data)->batteryState --;              //decrement battery by 1
 }
 
 void schedule(void* data){
-  //print("SCHEDULE RUNNING", 0, 5);
+  //print("SCHEDULE RUNNING", 0, 8);
   delay(10);
 }
 
