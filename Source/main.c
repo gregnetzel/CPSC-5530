@@ -30,6 +30,8 @@
 #define hSpacing 8
 #define vSpacing 14
 
+volatile int i = 0;
+
 //Data Variables
 unsigned int tempRaw = 70;
 unsigned int sysPressRaw = 80;
@@ -83,6 +85,7 @@ struct Display{
   unsigned char** sysPress;
   unsigned char** diaPress;
   unsigned char** heartRate;
+  unsigned short* batteryState;
 };typedef struct Display Display;
 
 struct Status{
@@ -127,7 +130,7 @@ int main(void)
     fillStructs(&measurementData, &computeData, &displayData, &statusData, 
                 &warningAlarmData);
     
-    volatile int i = 0;
+    
     RIT128x96x4Init(1000000);
     TCB taskManager[6];
     taskManager[0].myTask = measure;
@@ -163,32 +166,32 @@ void measure(void* data){
   if(((Measurements*)data)->reverseTemp == FALSE){    //increasing pattern
     if( *((Measurements*)data)->temp > 50){
       ((Measurements*)data)->reverseTemp = TRUE;      //reverse pattern
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->temp -= 2;
       }else{                                          //odd tick
         *((Measurements*)data)->temp += 1;
-      }*/
+      }
     }else{
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->temp += 2;
       }else{                                          //odd tick
         *((Measurements*)data)->temp -= 1;
-      }*/
+      }
     }
   }else{                                              //decreasing pattern
     if( *((Measurements*)data)->temp < 15){
       ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->temp += 2;
       }else{                                          //odd tick
         *((Measurements*)data)->temp -= 1;
-      }*/
+      }
     }else{
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->temp -= 2;
       }else{                                          //odd tick
         *((Measurements*)data)->temp += 1;
-      }*/
+      }
     }
   }
 
@@ -197,33 +200,33 @@ void measure(void* data){
     if( *((Measurements*)data)->sysPress > 100){       //systolic complete
       ((Measurements*)data)->sysComplete = TRUE;      //run diatolic
       *((Measurements*)data)->sysPress = 80;           //rest systolic
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->diaPress += 2;
       }else{                                          //odd tick
         *((Measurements*)data)->diaPress -= 1;
-      }*/
+      }
     }else{
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->sysPress += 2;
       }else{                                          //odd tick
         *((Measurements*)data)->sysPress -= 1;
-      }*/
+      }
     }
   }else{                                              //run diatolic
     if( *((Measurements*)data)->sysPress < 40){        //diatolic complete
       ((Measurements*)data)->sysComplete = FALSE;     //run systolic
       *((Measurements*)data)->diaPress = 80;           //reset diatolic
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->sysPress += 2;
       }else{                                          //odd tick
         *((Measurements*)data)->sysPress -= 1;
-      }*/
+      }
     }else{                                            
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->diaPress += 2;
       }else{                                          //odd tick
         *((Measurements*)data)->diaPress -= 1;
-      }*/
+      }
     }
   }
   
@@ -231,32 +234,32 @@ void measure(void* data){
   if(((Measurements*)data)->reversePulse == FALSE){    //increasing pattern
     if( *((Measurements*)data)->heartRate > 40){
       ((Measurements*)data)->reversePulse = TRUE;      //reverse pattern
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->temp += 1;
       }else{                                          //odd tick
         *((Measurements*)data)->temp -= 3;
-      }*/
+      }
     }else{
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->temp -= 1;
       }else{                                          //odd tick
         *((Measurements*)data)->temp += 3;
-      }*/
+      }
     }
   }else{                                              //decreasing pattern
     if( *((Measurements*)data)->heartRate < 15){
       ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->temp -= 1;
       }else{                                          //odd tick
         *((Measurements*)data)->temp += 3;
-      }*/
+      }
     }else{
-      /*if(i%2 == 0){                                   //even tick
+      if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->temp += 1;
       }else{                                          //odd tick
         *((Measurements*)data)->temp -= 3;
-      }*/
+      }
     }
   }
   
@@ -274,6 +277,11 @@ void compute(void* data){
   s = 9 + (2*s);
   d = (int)(6 + (1.5*d));
   h = 8 + (3*h);
+  
+  **((ComputeData*)data)->tempCorrected = t + '0';
+  **((ComputeData*)data)->sysPressCorrected = s + '0';
+  **((ComputeData*)data)->diaPressCorrected = d + '0';
+  **((ComputeData*)data)->heartRateCorrected = h + '0';
   /*
   NOT FINDING stdlib.h
   itoa(t,*((ComputeData*)data)->tempCorrected,10);
@@ -285,17 +293,19 @@ void compute(void* data){
 
 void display(void* data){
   //print("DISPLAY RUNNING", 0, 5);
-
-  print("???",0,0);                //Systolic: should never be over 3 char
+  //*((Display*)data)->member
+  
+  print((char*)*((Display*)data)->sysPress,0,0);                //Systolic: should never be over 3 char
   print("/",3,0);
-  print("???.?",4,0);              //Diatolic: should never be over 5 char (float)
+  print((char*)*((Display*)data)->diaPress,4,0);              //Diatolic: should never be over 5 char (float)
   print("mm Hg",9,0);
   
-  print("??.?",0,1);               //Temperature: should never be over 4 char (float)
+  print((char*)*((Display*)data)->temp,0,1);               //Temperature: should never be over 4 char (float)
   print("C",3,1);
-  print("???",5,1);                //Heartrate: should never be over 3 char
+  print((char*)*((Display*)data)->heartRate,5,1);                //Heartrate: should never be over 3 char
   print("BPM",8,1);
-  print("???",13,1);               //battery: should never be over 3 char
+  
+  print((char*)*((Display*)data)->batteryState,13,1);               //battery: should never be over 3 char
 
 }
 
@@ -341,6 +351,7 @@ void status(void* data){
 void schedule(void* data){
   //print("SCHEDULE RUNNING", 0, 8);
   delay(10);
+  i++;
 }
 
 void delay(unsigned long aValue){
@@ -381,6 +392,7 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
   d->sysPress = &sysPressCorrected;
   d->diaPress = &diaPressCorrected;
   d->heartRate = &heartRateCorrected;
+  d->batteryState = &batteryState;
   
   //status
   s->batteryState = &batteryState;
