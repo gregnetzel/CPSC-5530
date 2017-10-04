@@ -135,14 +135,21 @@ int main(void)
     taskManager[3].myTask = annunciate;
     taskManager[4].myTask = status;
     taskManager[5].myTask = schedule;
+    
+    taskManager[0].taskDataPtr = &measurementData;
+    taskManager[1].taskDataPtr = &computeData;
+    taskManager[2].taskDataPtr = &displayData;
+    taskManager[3].taskDataPtr = &warningAlarmData;
+    taskManager[4].taskDataPtr = &statusData;
+    taskManager[5].taskDataPtr = NULL;
     while(TRUE)
     {
-      taskManager[0].myTask(&measurementData);
-      taskManager[1].myTask(NULL);
-      taskManager[2].myTask(NULL); 
-      taskManager[3].myTask(NULL);
-      taskManager[4].myTask(&statusData);
-      taskManager[5].myTask(NULL);
+      taskManager[0].myTask(taskManager[0].taskDataPtr);
+      taskManager[1].myTask(taskManager[1].taskDataPtr);
+      taskManager[2].myTask(taskManager[2].taskDataPtr); 
+      taskManager[3].myTask(taskManager[3].taskDataPtr);
+      taskManager[4].myTask(taskManager[4].taskDataPtr);
+      taskManager[5].myTask(taskManager[5].taskDataPtr);
       delay(100);
     }
 }
@@ -256,7 +263,7 @@ void measure(void* data){
 
 void compute(void* data){
   print("COMPUTE RUNNING", 0, 1);
-  //((Measurements*)raw)->member ((Display*)calc)->member
+
   float t = (float)*(((ComputeData*)data)->tempRaw);
   unsigned int s = *(((ComputeData*)data)->sysPressRaw);
   float d = (float)*(((ComputeData*)data)->diaPressRaw);
@@ -271,13 +278,6 @@ void compute(void* data){
   **((ComputeData*)data)->sysPressCorrected = s;
   **((ComputeData*)data)->diaPressCorrected = (int)d; 
   **((ComputeData*)data)->heartRateCorrected = h;
-/*
-  sprintf(((ComputeData*)data)->tempCorrected, "%d", t);
-  *((ComputeData*)data)->tempCorrected
-  *((ComputeData*)data)->sysPressCorrected
-  *((ComputeData*)data)->diaPressCorrected 
-  *((ComputeData*)data)->heartRateCorrected
-   */
 }
 
 void display(void* data){

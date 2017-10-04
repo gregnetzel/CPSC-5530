@@ -6,144 +6,78 @@
   <configuration>
     <name>Debug</name>
     <outputs>
-      <file>$PROJ_DIR$\..\LabOneApp2\Source\main.c</file>
-      <file>$TOOLKIT_DIR$\lib\dl7M_tl_in.a</file>
-      <file>$PROJ_DIR$\Debug\Exe\LabOne.out</file>
+      <file>$PROJ_DIR$\Debug\Obj\startup_ewarm.o</file>
+      <file>$TOOLKIT_DIR$\config\generic_cortex.icf</file>
+      <file>$PROJ_DIR$\main.c</file>
+      <file>$TOOLKIT_DIR$\inc\DLib_Config_Normal.h</file>
+      <file>$PROJ_DIR$\..\..\..\driverlib\ssi.h</file>
+      <file>$PROJ_DIR$\Source\fPrint.c</file>
+      <file>$TOOLKIT_DIR$\inc\stdio.h</file>
+      <file>$TOOLKIT_DIR$\inc\DLib_Threads.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\rit128x96x4.o</file>
+      <file>$TOOLKIT_DIR$\inc\DLib_Defaults.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\fPrint.pbi</file>
+      <file>$PROJ_DIR$\..\..\..\inc\hw_sysctl.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\LabOne.pbd</file>
+      <file>$PROJ_DIR$\Debug\Obj\fPrint.o</file>
+      <file>$PROJ_DIR$\..\..\..\inc\hw_types.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\rit128x96x4.pbi</file>
+      <file>$PROJ_DIR$\..\..\..\driverlib\sysctl.h</file>
+      <file>$PROJ_DIR$\..\..\..\inc\hw_ssi.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\startup_ewarm.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\ycheck.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\main.o</file>
       <file>$TOOLKIT_DIR$\inc\ysizet.h</file>
       <file>$TOOLKIT_DIR$\inc\yvals.h</file>
-      <file>$TOOLKIT_DIR$\inc\DLib_Product.h</file>
+      <file>$PROJ_DIR$\..\..\..\driverlib\debug.h</file>
       <file>$TOOLKIT_DIR$\lib\shb_l.a</file>
+      <file>$TOOLKIT_DIR$\inc\DLib_Product.h</file>
+      <file>$PROJ_DIR$\Debug\Exe\LabOne.out</file>
       <file>$PROJ_DIR$\..\..\..\driverlib\gpio.h</file>
       <file>$TOOLKIT_DIR$\lib\rt7M_tl.a</file>
       <file>$PROJ_DIR$\Debug\Obj\Project.pbd</file>
-      <file>$PROJ_DIR$\..\..\..\inc\hw_memmap.h</file>
-      <file>$PROJ_DIR$\..\..\..\driverlib\debug.h</file>
-      <file>$PROJ_DIR$\..\drivers\rit128x96x4.h</file>
       <file>$TOOLKIT_DIR$\inc\xencoding_limits.h</file>
+      <file>$PROJ_DIR$\..\..\..\inc\hw_memmap.h</file>
+      <file>$TOOLKIT_DIR$\lib\dl7M_tl_in.a</file>
       <file>$PROJ_DIR$\Debug\Obj\main.pbi</file>
-      <file>$TOOLKIT_DIR$\inc\DLib_Defaults.h</file>
-      <file>$PROJ_DIR$\Debug\Obj\startup_ewarm.pbi</file>
-      <file>$PROJ_DIR$\..\..\..\driverlib\sysctl.h</file>
-      <file>$TOOLKIT_DIR$\inc\DLib_Threads.h</file>
-      <file>$TOOLKIT_DIR$\inc\DLib_Config_Normal.h</file>
-      <file>$TOOLKIT_DIR$\config\generic_cortex.icf</file>
-      <file>$PROJ_DIR$\Debug\Obj\rit128x96x4.o</file>
-      <file>$PROJ_DIR$\Debug\Obj\fPrint.pbi</file>
-      <file>$PROJ_DIR$\Source\rit128x96x4.c</file>
+      <file>$PROJ_DIR$\..\drivers\rit128x96x4.h</file>
       <file>$PROJ_DIR$\Source\startup_ewarm.c</file>
-      <file>$PROJ_DIR$\Debug\Obj\startup_ewarm.o</file>
-      <file>$PROJ_DIR$\..\LabOneApp3\Source\main.c</file>
-      <file>$PROJ_DIR$\..\..\..\inc\hw_sysctl.h</file>
-      <file>$PROJ_DIR$\driverlib.a</file>
-      <file>$PROJ_DIR$\Debug\Obj\rit128x96x4.pbi</file>
       <file>$PROJ_DIR$\Source\main.c</file>
-      <file>$PROJ_DIR$\main.c</file>
-      <file>$TOOLKIT_DIR$\inc\ycheck.h</file>
-      <file>$PROJ_DIR$\Debug\Obj\LabOne.pbd</file>
-      <file>$PROJ_DIR$\Debug\Obj\fPrint.o</file>
-      <file>$PROJ_DIR$\..\..\..\inc\hw_ssi.h</file>
-      <file>$PROJ_DIR$\..\..\..\driverlib\ssi.h</file>
-      <file>$PROJ_DIR$\Debug\Obj\main.o</file>
-      <file>$PROJ_DIR$\..\..\..\inc\hw_types.h</file>
-      <file>$PROJ_DIR$\Source\fPrint.c</file>
-      <file>$TOOLKIT_DIR$\inc\stdio.h</file>
+      <file>$PROJ_DIR$\driverlib.a</file>
+      <file>$PROJ_DIR$\Source\rit128x96x4.c</file>
     </outputs>
     <file>
       <name>[ROOT_NODE]</name>
       <outputs>
         <tool>
           <name>ILINK</name>
-          <file> 2</file>
+          <file> 26</file>
         </tool>
       </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\Debug\Exe\LabOne.out</name>
-      <inputs>
-        <tool>
-          <name>ILINK</name>
-          <file> 20 37 21 25 28 6 8 1</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\Debug\Obj\Project.pbd</name>
-      <inputs>
-        <tool>
-          <name>BILINK</name>
-          <file> 14 29 16</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\Source\rit128x96x4.c</name>
-      <outputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 29</file>
-        </tool>
-        <tool>
-          <name>ICCARM</name>
-          <file> 21</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 35 10 27 38 11 7 36 17 12</file>
-        </tool>
-        <tool>
-          <name>ICCARM</name>
-          <file> 35 10 27 38 11 7 36 17 12</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\Source\startup_ewarm.c</name>
-      <outputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 16</file>
-        </tool>
-        <tool>
-          <name>ICCARM</name>
-          <file> 25</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\Source\main.c</name>
-      <outputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 14</file>
-        </tool>
-        <tool>
-          <name>ICCARM</name>
-          <file> 37</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 40 32 4 15 5 13 18 3 12</file>
-        </tool>
-        <tool>
-          <name>ICCARM</name>
-          <file> 40 32 4 15 19 5 13 18 3 12</file>
-        </tool>
-      </inputs>
     </file>
     <file>
       <name>$PROJ_DIR$\main.c</name>
       <outputs>
         <tool>
           <name>BICOMP</name>
-          <file> 14</file>
+          <file> 33</file>
         </tool>
         <tool>
           <name>ICCARM</name>
-          <file> 37</file>
+          <file> 20</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Source\fPrint.c</name>
+      <outputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10</file>
+        </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 13</file>
         </tool>
       </outputs>
     </file>
@@ -152,22 +86,86 @@
       <inputs>
         <tool>
           <name>BILINK</name>
-          <file> 22 14 29 16</file>
+          <file> 10 33 15 18</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\Source\fPrint.c</name>
+      <name>$PROJ_DIR$\Debug\Exe\LabOne.out</name>
+      <inputs>
+        <tool>
+          <name>ILINK</name>
+          <file> 1 20 8 0 37 24 28 32</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug\Obj\Project.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 33 15 18</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Source\startup_ewarm.c</name>
       <outputs>
         <tool>
           <name>BICOMP</name>
-          <file> 22</file>
+          <file> 18</file>
         </tool>
         <tool>
           <name>ICCARM</name>
-          <file> 34</file>
+          <file> 0</file>
         </tool>
       </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Source\main.c</name>
+      <outputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 33</file>
+        </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 20</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 19 22 9 25 30 7 21 34</file>
+        </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 19 22 9 3 25 30 7 21 34</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Source\rit128x96x4.c</name>
+      <outputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 15</file>
+        </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 8</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 17 31 11 14 23 27 4 16 34</file>
+        </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 17 31 11 14 23 27 4 16 34</file>
+        </tool>
+      </inputs>
     </file>
   </configuration>
   <configuration>
