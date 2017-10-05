@@ -24,6 +24,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "drivers/rit128x96x4.h"
 #define TRUE 1
 #define FALSE 0
@@ -278,10 +280,10 @@ void compute(void* data){
   d = (int)(6 + (1.5*d));
   h = 8 + (3*h);
   
-  **((ComputeData*)data)->tempCorrected = t + '0';
-  **((ComputeData*)data)->sysPressCorrected = s + '0';
-  **((ComputeData*)data)->diaPressCorrected = d + '0';
-  **((ComputeData*)data)->heartRateCorrected = h + '0';
+  **((ComputeData*)data)->tempCorrected = t + '0' + '\0';
+  **((ComputeData*)data)->sysPressCorrected = s + '0\0';
+  **((ComputeData*)data)->diaPressCorrected = d + '0\0';
+  **((ComputeData*)data)->heartRateCorrected = h + '0\0';
   /*
   NOT FINDING stdlib.h
   itoa(t,*((ComputeData*)data)->tempCorrected,10);
@@ -386,6 +388,11 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
   c->sysPressCorrected = &sysPressCorrected;
   c->diaPressCorrected = &diaPressCorrected;
   c->heartRateCorrected = &heartRateCorrected;
+  
+  //*tempCorrected = {'0','0','0','0'};
+  //*sysPressCorrected = &sysPressCorrected;
+  //*diaPressCorrected = &diaPressCorrected;
+  //*heartRateCorrected = &heartRateCorrected;
   
   //display
   d->temp = &tempCorrected;

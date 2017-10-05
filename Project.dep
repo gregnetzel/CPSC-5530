@@ -46,6 +46,8 @@
       <file>$TOOLKIT_DIR$\inc\stdio.h</file>
       <file>$TOOLKIT_DIR$\inc\DLib_Threads.h</file>
       <file>$TOOLKIT_DIR$\inc\stdlib.h</file>
+      <file>$TOOLKIT_DIR$\inc\DLib_Product_string.h</file>
+      <file>$TOOLKIT_DIR$\inc\string.h</file>
     </outputs>
     <file>
       <name>[ROOT_NODE]</name>
@@ -100,10 +102,6 @@
       <name>$PROJ_DIR$\Source\main.c</name>
       <outputs>
         <tool>
-          <name>ICCARM</name>
-          <file> 23</file>
-        </tool>
-        <tool>
           <name>BICOMP</name>
           <file> 5</file>
         </tool>
@@ -111,11 +109,11 @@
       <inputs>
         <tool>
           <name>ICCARM</name>
-          <file> 37 13 19 14 29 20 4 38 15 39 24</file>
+          <file> 37 13 19 14 29 20 4 38 15 39 41 40 24</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 37 13 19 14 20 4 38 15 39 24</file>
+          <file> 37 13 19 14 20 4 38 15 39 41 40 24</file>
         </tool>
       </inputs>
     </file>
