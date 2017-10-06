@@ -40,10 +40,10 @@ unsigned int sysPressRaw = 80;
 unsigned int diaPressRaw = 80;
 unsigned int heartRateRaw = 50;
 
-unsigned char* tempCorrected = NULL;
-unsigned char* sysPressCorrected = NULL;
-unsigned char* diaPressCorrected = NULL;
-unsigned char* heartRateCorrected = NULL;
+unsigned char* tempCorrected[5];
+unsigned char* sysPressCorrected[4];
+unsigned char* diaPressCorrected[6];
+unsigned char* heartRateCorrected[4];
 
 unsigned short batteryState = 200;
 
@@ -113,6 +113,7 @@ void status(void* data);
 void schedule(void* data);
 void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, 
                  WarningAlarm* w);
+void intToStr(int num, int size, unsigned char* str);
 
 //*****************************************************************************
 //
@@ -131,7 +132,6 @@ int main(void)
     
     fillStructs(&measurementData, &computeData, &displayData, &statusData, 
                 &warningAlarmData);
-    
     
     RIT128x96x4Init(1000000);
     TCB taskManager[6];
@@ -280,17 +280,10 @@ void compute(void* data){
   d = (int)(6 + (1.5*d));
   h = 8 + (3*h);
   
-  **((ComputeData*)data)->tempCorrected = t + '0' + '\0';
-  **((ComputeData*)data)->sysPressCorrected = s + '0\0';
-  **((ComputeData*)data)->diaPressCorrected = d + '0\0';
-  **((ComputeData*)data)->heartRateCorrected = h + '0\0';
-  /*
-  NOT FINDING stdlib.h
-  itoa(t,*((ComputeData*)data)->tempCorrected,10);
-  itoa(s,*((ComputeData*)data)->sysPressCorrected,10);
-  itoa(d,*((ComputeData*)data)->diaPressCorrected,10); 
-  itoa(h,*((ComputeData*)data)->heartRateCorrected,10);
-  */
+  intToStr((int)t, 4, *((ComputeData*)data)->tempCorrected);
+  intToStr(s, 3, *((ComputeData*)data)->sysPressCorrected);
+  intToStr((int)d, 5, *((ComputeData*)data)->diaPressCorrected);
+  intToStr(h, 3, *((ComputeData*)data)->heartRateCorrected);
 }
 
 void display(void* data){
@@ -299,7 +292,7 @@ void display(void* data){
   
   print((char*)*((Display*)data)->sysPress,0,0);                //Systolic: should never be over 3 char
   print("/",3,0);
-  print((char*)*((Display*)data)->diaPress,4,0);              //Diatolic: should never be over 5 char (float)
+  print((char*)*((Display*)data)->diaPress,4,0);              //Diastolic: should never be over 5 char (float)
   print("mm Hg",9,0);
   
   print((char*)*((Display*)data)->temp,0,1);               //Temperature: should never be over 4 char (float)
@@ -312,14 +305,13 @@ void display(void* data){
 }
 
 void annunciate(void* data){
-  //print("ANNUNCIATE RUNNING", 0, 6);
   //*((WarningAlarm*)data)->member
 
   float t = (float)*(((WarningAlarm*)data)->temp);
   unsigned int s = *(((WarningAlarm*)data)->sysPress);
   float d = (float)*(((WarningAlarm*)data)->diaPress);
   unsigned int h = *(((WarningAlarm*)data)->heartRate);
-  short b = *(((WarningAlarm*)data)->batteryState);
+  short b = 0;//*(((WarningAlarm*)data)->batteryState); //causes a fault
   
   t = 5 + (0.75*t);
   s = 9 + (2*s);
@@ -384,21 +376,16 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
   c->sysPressRaw = &sysPressRaw;
   c->diaPressRaw = &diaPressRaw;
   c->heartRateRaw = &heartRateRaw;
-  c->tempCorrected = &tempCorrected;
-  c->sysPressCorrected = &sysPressCorrected;
-  c->diaPressCorrected = &diaPressCorrected;
-  c->heartRateCorrected = &heartRateCorrected;
-  
-  //*tempCorrected = {'0','0','0','0'};
-  //*sysPressCorrected = &sysPressCorrected;
-  //*diaPressCorrected = &diaPressCorrected;
-  //*heartRateCorrected = &heartRateCorrected;
+  c->tempCorrected = tempCorrected;
+  c->sysPressCorrected = sysPressCorrected;
+  c->diaPressCorrected = diaPressCorrected;
+  c->heartRateCorrected = heartRateCorrected;
   
   //display
-  d->temp = &tempCorrected;
-  d->sysPress = &sysPressCorrected;
-  d->diaPress = &diaPressCorrected;
-  d->heartRate = &heartRateCorrected;
+  d->temp = tempCorrected;
+  d->sysPress = sysPressCorrected;
+  d->diaPress = diaPressCorrected;
+  d->heartRate = heartRateCorrected;
   d->batteryState = &batteryState;
   
   //status
@@ -409,4 +396,14 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
   w->sysPress = &sysPressRaw;
   w->diaPress = &diaPressRaw;
   w->heartRate = &heartRateRaw;
+}
+
+void intToStr(int num, int size, unsigned char* str){//number, size, and memory location
+  str[size+1] = '\0';
+  volatile int c;
+  volatile int j;
+  for(j = 0; j < size; j++){
+    str[size-j] = num%10+'0';
+    num /= 10;
+  }
 }

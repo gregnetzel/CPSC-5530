@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-1070196043
+Checksum=-1078566410
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -22,7 +22,8 @@ ByteLimit=50
 [Disassemble mode]
 mode=0
 [Breakpoints]
-Count=0
+Bp0=_ "STD_CODE" "{$PROJ_DIR$\Source\main.c}.402.3@1" 1 0 0 0 "" 0 ""
+Count=1
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -37,5 +38,5 @@ SuppressDialog=0
 Enabled=0
 [DriverProfiling]
 Enabled=0
-Mode=1364345427
+Mode=5701747
 Graph=0
