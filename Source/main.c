@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "inc/lm3s8962.h"
 #include "drivers/rit128x96x4.h"
 #define TRUE 1
 #define FALSE 0
@@ -33,6 +34,7 @@
 #define vSpacing 14
 
 volatile int i = 0;
+volatile unsigned long ulLoop;
 
 //Data Variables
 unsigned int tempRaw = 70;
@@ -129,6 +131,23 @@ int main(void)
     Display displayData;
     Status statusData;
     WarningAlarm warningAlarmData;
+
+    //
+    // Enable the GPIO port that is used for the on-board LED.
+    //
+    SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;
+  
+    //
+    // Do a dummy read to insert a few cycles after enabling the peripheral.
+    //
+    ulLoop = SYSCTL_RCGC2_R;
+  
+    //
+    // Enable the GPIO pin for the LED (PF0).  Set the direction as output, and
+    // enable the GPIO pin for digital function.
+    //
+    GPIO_PORTF_DIR_R = 0x01;
+    GPIO_PORTF_DEN_R = 0x01;
     
     fillStructs(&measurementData, &computeData, &displayData, &statusData, 
                 &warningAlarmData);
@@ -318,22 +337,57 @@ void annunciate(void* data){
   d = 6 + (1.5*d);
   h = 8 + (3*h);
   
-  if(b < 40){
-    //no instructions given
-  }
+//  if(b < 40){
+//    //no instructions given
+//  }
   
   if(t > 37.8 || t < 36.1){
     //flash light at 1 second interval
+    // Turn on the LED
+//    GPIO_PORTF_DATA_R |= 0x01;
+//    for(ulLoop = 0; ulLoop < 10000000; ulLoop++)
+//    {
+//    }
+//    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
   }
   
   if(h > 100 || h < 60){
     //flash light at 2 second interval
+    // Turn on the LED
+//    GPIO_PORTF_DATA_R |= 0x01;
+//    for(ulLoop = 0; ulLoop < 2000000; ulLoop++)
+//    {
+//    }
+//    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
   }
   
   if(s > 120 || s < 90 || d > 80 || d < 60){
     //flash light at 0.5 second interval
+    // Turn on the LED
+//    GPIO_PORTF_DATA_R |= 0x01;
+//    for(ulLoop = 0; ulLoop < 500000; ulLoop++)
+//    {
+//    }
+//    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
   }
   
+  //
+  // Turn on the LED.
+  //
+  GPIO_PORTF_DATA_R |= 0x01;
+  
+  for(ulLoop = 0; ulLoop < 200000; ulLoop++)
+  {
+  }
+  
+  GPIO_PORTF_DATA_R &= ~(0x01);                 // Turn LED off
+  
+  //
+  // Delay for a bit.
+  //
+  for(ulLoop = 0; ulLoop < 200000; ulLoop++)
+  {
+  }
 }
 
 
