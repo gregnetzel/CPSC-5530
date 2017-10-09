@@ -330,7 +330,7 @@ void annunciate(void* data){
   unsigned int s = *(((WarningAlarm*)data)->sysPress);
   float d = (float)*(((WarningAlarm*)data)->diaPress);
   unsigned int h = *(((WarningAlarm*)data)->heartRate);
-  short b = *(((WarningAlarm*)data)->batteryState); //causes a fault
+  short b = *(((WarningAlarm*)data)->batteryState);
   int counter = 0; //for "alarm cycle"
   
   t = 5 + (0.75*t);
@@ -391,7 +391,8 @@ void annunciate(void* data){
 
 void status(void* data){
   //print("STATUS RUNNING", 0, 7);
-  ((Status*)data)->batteryState--;              //decrement battery by 1
+  //unsigned short b = *((Status*)data)->batteryState;
+  *(((Status*)data)->batteryState)-= 1;              //decrement battery by 1
 }
 
 void schedule(void* data){
