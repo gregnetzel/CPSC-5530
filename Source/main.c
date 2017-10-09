@@ -337,57 +337,70 @@ void annunciate(void* data){
   d = 6 + (1.5*d);
   h = 8 + (3*h);
   
-//  if(b < 40){
-//    //no instructions given
-//  }
+  if(b < 40){
+    //no instructions given
+  }
   
   if(t > 37.8 || t < 36.1){
     //flash light at 1 second interval
     // Turn on the LED
-//    GPIO_PORTF_DATA_R |= 0x01;
-//    for(ulLoop = 0; ulLoop < 10000000; ulLoop++)
-//    {
-//    }
-//    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 10000000; ulLoop++)
+    {
+    }
+    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+    for(ulLoop = 0; ulLoop < 10000000; ulLoop++){}
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 10000000; ulLoop++){}
+    GPIO_PORTF_DATA_R &= ~(0x01);
+    
   }
   
   if(h > 100 || h < 60){
     //flash light at 2 second interval
     // Turn on the LED
-//    GPIO_PORTF_DATA_R |= 0x01;
-//    for(ulLoop = 0; ulLoop < 2000000; ulLoop++)
-//    {
-//    }
-//    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 2000000; ulLoop++)
+    {
+    }
+    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+    for(ulLoop = 0; ulLoop < 20000000; ulLoop++){}
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 20000000; ulLoop++){}
+    GPIO_PORTF_DATA_R &= ~(0x01);
   }
   
   if(s > 120 || s < 90 || d > 80 || d < 60){
     //flash light at 0.5 second interval
     // Turn on the LED
-//    GPIO_PORTF_DATA_R |= 0x01;
-//    for(ulLoop = 0; ulLoop < 500000; ulLoop++)
-//    {
-//    }
-//    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 500000; ulLoop++)
+    {
+    }
+    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+    for(ulLoop = 0; ulLoop < 500000; ulLoop++){}
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 500000; ulLoop++){}
+    GPIO_PORTF_DATA_R &= ~(0x01);
   }
   
   //
   // Turn on the LED.
   //
-  GPIO_PORTF_DATA_R |= 0x01;
-  
-  for(ulLoop = 0; ulLoop < 200000; ulLoop++)
-  {
-  }
-  
-  GPIO_PORTF_DATA_R &= ~(0x01);                 // Turn LED off
+//  GPIO_PORTF_DATA_R |= 0x01;
+//  
+//  for(ulLoop = 0; ulLoop < 200000; ulLoop++)
+//  {
+//  }
+//  
+//  GPIO_PORTF_DATA_R &= ~(0x01);                 // Turn LED off
   
   //
   // Delay for a bit.
   //
-  for(ulLoop = 0; ulLoop < 200000; ulLoop++)
-  {
-  }
+//  for(ulLoop = 0; ulLoop < 200000; ulLoop++)
+//  {
+//  }
 }
 
 
