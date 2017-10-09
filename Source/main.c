@@ -339,7 +339,16 @@ void annunciate(void* data){
   h = 8 + (3*h);
   
   if(b < 40){
-    //no instructions given
+    //flash light at 3 second interval
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 30000000; ulLoop++)
+    {
+    }
+    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+    for(ulLoop = 0; ulLoop < 30000000; ulLoop++){}
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 30000000; ulLoop++){}
+    GPIO_PORTF_DATA_R &= ~(0x01);
   }
   
   if(t > 37.8 || t < 36.1){
