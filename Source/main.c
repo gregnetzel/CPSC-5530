@@ -330,7 +330,7 @@ void annunciate(void* data){
   unsigned int s = *(((WarningAlarm*)data)->sysPress);
   float d = (float)*(((WarningAlarm*)data)->diaPress);
   unsigned int h = *(((WarningAlarm*)data)->heartRate);
-  short b = 0;//*(((WarningAlarm*)data)->batteryState); //causes a fault
+  short b = *(((WarningAlarm*)data)->batteryState); //causes a fault
   int counter = 0; //for "alarm cycle"
   
   t = 5 + (0.75*t);
@@ -340,20 +340,18 @@ void annunciate(void* data){
   
   if(b < 40){
     //flash light at 3 second interval
-    GPIO_PORTF_DATA_R |= 0x01;
-    for(ulLoop = 0; ulLoop < 30000000; ulLoop++)
-    {
+    while(counter < 3) {
+      GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+      delay(30);
+      GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
+      delay(30);
+      counter++;
     }
-    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
-    for(ulLoop = 0; ulLoop < 30000000; ulLoop++){}
-    GPIO_PORTF_DATA_R |= 0x01;
-    for(ulLoop = 0; ulLoop < 30000000; ulLoop++){}
-    GPIO_PORTF_DATA_R &= ~(0x01);
   }
   
   if(t > 37.8 || t < 36.1){
     //flash light at 1 second interval
-    while(counter < 5){
+    while(counter < 3){
       GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
       delay(20);
       GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
@@ -364,7 +362,7 @@ void annunciate(void* data){
   
   if(h > 100 || h < 60){
     //flash light at 2 second interval
-    while(counter < 5){
+    while(counter < 3){
       GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
       delay(40);
       GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
@@ -375,7 +373,7 @@ void annunciate(void* data){
   
   if(s > 120 || s < 90 || d > 80 || d < 60){
     //flash light at 0.5 second interval
-    while(counter < 5){
+    while(counter < 3){
       GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
       delay(10);
       GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
@@ -393,7 +391,7 @@ void annunciate(void* data){
 
 void status(void* data){
   //print("STATUS RUNNING", 0, 7);
-  ((Status*)data)->batteryState --;              //decrement battery by 1
+  ((Status*)data)->batteryState--;              //decrement battery by 1
 }
 
 void schedule(void* data){
@@ -475,6 +473,7 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
   w->sysPress = &sysPressRaw;
   w->diaPress = &diaPressRaw;
   w->heartRate = &heartRateRaw;
+  w->batteryState = &batteryState;
 }
 
 void intToStr(int num, int size, unsigned char* str){//number, size, and memory location
