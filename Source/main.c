@@ -331,6 +331,7 @@ void annunciate(void* data){
   float d = (float)*(((WarningAlarm*)data)->diaPress);
   unsigned int h = *(((WarningAlarm*)data)->heartRate);
   short b = 0;//*(((WarningAlarm*)data)->batteryState); //causes a fault
+  int counter = 0; //for "alarm cycle"
   
   t = 5 + (0.75*t);
   s = 9 + (2*s);
@@ -338,69 +339,55 @@ void annunciate(void* data){
   h = 8 + (3*h);
   
   if(b < 40){
-    //no instructions given
+    //flash light at 3 second interval
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 30000000; ulLoop++)
+    {
+    }
+    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+    for(ulLoop = 0; ulLoop < 30000000; ulLoop++){}
+    GPIO_PORTF_DATA_R |= 0x01;
+    for(ulLoop = 0; ulLoop < 30000000; ulLoop++){}
+    GPIO_PORTF_DATA_R &= ~(0x01);
   }
   
   if(t > 37.8 || t < 36.1){
     //flash light at 1 second interval
-    // Turn on the LED
-    GPIO_PORTF_DATA_R |= 0x01;
-    for(ulLoop = 0; ulLoop < 10000000; ulLoop++)
-    {
+    while(counter < 5){
+      GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+      delay(20);
+      GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
+      delay(20);
+      counter++;
     }
-    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
-    for(ulLoop = 0; ulLoop < 10000000; ulLoop++){}
-    GPIO_PORTF_DATA_R |= 0x01;
-    for(ulLoop = 0; ulLoop < 10000000; ulLoop++){}
-    GPIO_PORTF_DATA_R &= ~(0x01);
-    
   }
   
   if(h > 100 || h < 60){
     //flash light at 2 second interval
-    // Turn on the LED
-    GPIO_PORTF_DATA_R |= 0x01;
-    for(ulLoop = 0; ulLoop < 2000000; ulLoop++)
-    {
+    while(counter < 5){
+      GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+      delay(40);
+      GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
+      delay(40);
+      counter++;
     }
-    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
-    for(ulLoop = 0; ulLoop < 20000000; ulLoop++){}
-    GPIO_PORTF_DATA_R |= 0x01;
-    for(ulLoop = 0; ulLoop < 20000000; ulLoop++){}
-    GPIO_PORTF_DATA_R &= ~(0x01);
   }
   
   if(s > 120 || s < 90 || d > 80 || d < 60){
     //flash light at 0.5 second interval
-    // Turn on the LED
-    GPIO_PORTF_DATA_R |= 0x01;
-    for(ulLoop = 0; ulLoop < 500000; ulLoop++)
-    {
+    while(counter < 5){
+      GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+      delay(10);
+      GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
+      delay(10);
+      counter++;
     }
-    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
-    for(ulLoop = 0; ulLoop < 500000; ulLoop++){}
-    GPIO_PORTF_DATA_R |= 0x01;
-    for(ulLoop = 0; ulLoop < 500000; ulLoop++){}
-    GPIO_PORTF_DATA_R &= ~(0x01);
   }
   
-  //
-  // Turn on the LED.
-  //
-//  GPIO_PORTF_DATA_R |= 0x01;
-//  
-//  for(ulLoop = 0; ulLoop < 200000; ulLoop++)
-//  {
-//  }
-//  
-//  GPIO_PORTF_DATA_R &= ~(0x01);                 // Turn LED off
   
-  //
-  // Delay for a bit.
-  //
-//  for(ulLoop = 0; ulLoop < 200000; ulLoop++)
-//  {
-//  }
+  // Turn on the LED for normal state.
+  GPIO_PORTF_DATA_R |= 0x01;
+  
 }
 
 
