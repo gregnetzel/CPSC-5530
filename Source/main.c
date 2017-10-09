@@ -42,10 +42,10 @@ unsigned int sysPressRaw = 80;
 unsigned int diaPressRaw = 80;
 unsigned int heartRateRaw = 50;
 
-unsigned char* tempCorrected[5];
-unsigned char* sysPressCorrected[4];
-unsigned char* diaPressCorrected[6];
-unsigned char* heartRateCorrected[4];
+float tempCorrected;
+unsigned int sysPressCorrected;
+unsigned int diaPressCorrected;
+unsigned int heartRateCorrected;
 
 unsigned short batteryState = 200;
 
@@ -78,17 +78,17 @@ struct ComputeData{
   unsigned int* sysPressRaw;
   unsigned int* diaPressRaw;
   unsigned int* heartRateRaw;
-  unsigned char* tempCorrected;
-  unsigned char* sysPressCorrected;
-  unsigned char* diaPressCorrected;
-  unsigned char* heartRateCorrected;
+  float* tempCorrected;
+  unsigned int* sysPressCorrected;
+  unsigned int* diaPressCorrected;
+  unsigned int* heartRateCorrected;
 };typedef struct ComputeData ComputeData;
 
 struct Display{
-  unsigned char* temp;
-  unsigned char* sysPress;
-  unsigned char* diaPress;
-  unsigned char* heartRate;
+  float* temp;
+  unsigned int* sysPress;
+  unsigned int* diaPress;
+  unsigned int* heartRate;
   unsigned short* batteryState;
 };typedef struct Display Display;
 
@@ -116,7 +116,8 @@ void schedule(void* data);
 void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, 
                  WarningAlarm* w);
 void intToStr(int num, int size, unsigned char* str);
-
+void intPrint(int c, int size, int hOffset, int vOffset);
+void fPrint(float c, int size, int hOffset, int vOffset);
 //*****************************************************************************
 //
 // DESCRIPTION
@@ -175,7 +176,7 @@ int main(void)
       taskManager[3].myTask(taskManager[3].taskDataPtr);
       taskManager[4].myTask(taskManager[4].taskDataPtr);
       taskManager[5].myTask(taskManager[5].taskDataPtr);
-      delay(100);
+      delay(10);
     }
 }
 //Measure, Compute, Display, Annunciate, Status, Schedule
@@ -294,32 +295,31 @@ void compute(void* data){
   float d = (float)*(((ComputeData*)data)->diaPressRaw);
   unsigned int h = *(((ComputeData*)data)->heartRateRaw);
   
-  t = (int)(5 + (0.75*t));
+  t = (5 + (0.75*t));
   s = 9 + (2*s);
   d = (int)(6 + (1.5*d));
   h = 8 + (3*h);
-  
-  //intToStr((int)t, 4, *((ComputeData*)data)->tempCorrected);
-  //intToStr(s, 3, *((ComputeData*)data)->sysPressCorrected);
-  //intToStr((int)d, 5, *((ComputeData*)data)->diaPressCorrected);
-  //intToStr(h, 3, *((ComputeData*)data)->heartRateCorrected);
+  *((ComputeData*)data)->tempCorrected = t;
+  *((ComputeData*)data)->sysPressCorrected = s;
+  *((ComputeData*)data)->diaPressCorrected = (int)d;
+  *((ComputeData*)data)->heartRateCorrected = h;
 }
 
 void display(void* data){
   //print("DISPLAY RUNNING", 0, 5);
   //*((Display*)data)->member
-  
-  print((char*)*((Display*)data)->sysPress,0,0);                //Systolic: should never be over 3 char
+  volatile int t = *((Display*)data)->sysPress;
+  intPrint(*((Display*)data)->sysPress,3,0,0);         //Systolic: should never be over 3 char
   print("/",3,0);
-  print((char*)*((Display*)data)->diaPress,4,0);              //Diastolic: should never be over 5 char (float)
+  intPrint(*((Display*)data)->diaPress,5,4,0);         //Diastolic: should never be over 5 char
   print("mm Hg",9,0);
   
-  print((char*)*((Display*)data)->temp,0,1);               //Temperature: should never be over 4 char (float)
-  print("C",3,1);
-  print((char*)*((Display*)data)->heartRate,5,1);                //Heartrate: should never be over 3 char
-  print("BPM",8,1);
+  fPrint(*((Display*)data)->temp,4,0,1);             //Temperature: should never be over 4 char
+  print("C",4,1);
+  intPrint(*((Display*)data)->heartRate,3,6,1);        //Heartrate: should never be over 3 char
+  print("BPM",9,1);
   
-  print((char*)*((Display*)data)->batteryState,13,1);               //battery: should never be over 3 char
+  intPrint(*((Display*)data)->batteryState,3,13,1);    //battery: should never be over 3 char
 
 }
 
@@ -428,6 +428,31 @@ void print(char* c, int hOffset, int vOffset){// string, column, row
   RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
 }
 
+void intPrint(int c, int size, int hOffset, int vOffset){// string, column, row
+  char dec[2];
+  dec[1] = '\0';
+  int rem = c;
+  for( int i = size-1; i >= 0; i--){
+    dec[0] = rem%10 + '0';
+    rem = rem/10;
+    RIT128x96x4StringDraw(dec, hSpacing*(hOffset +i), vSpacing*(vOffset), 15);
+  }
+}
+void fPrint(float c, int size, int hOffset, int vOffset){
+  char dec[2];
+  dec[1] = '\0';
+  int rem = (int)c*10;
+  for( int i = size-1; i >= 0; i--){
+    if(i == size - 2)
+      RIT128x96x4StringDraw(".", hSpacing*(hOffset +i), vSpacing*(vOffset), 15);
+    else{
+      dec[0] = rem%10 + '0';
+      rem = rem/10;
+      RIT128x96x4StringDraw(dec, hSpacing*(hOffset +i), vSpacing*(vOffset), 15);
+    }
+  }
+}
+
 void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, WarningAlarm* w){
   //measure
   m->temp = &tempRaw;
@@ -443,16 +468,16 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
   c->sysPressRaw = &sysPressRaw;
   c->diaPressRaw = &diaPressRaw;
   c->heartRateRaw = &heartRateRaw;
-  c->tempCorrected = *tempCorrected;
-  c->sysPressCorrected = *sysPressCorrected;
-  c->diaPressCorrected = *diaPressCorrected;
-  c->heartRateCorrected = *heartRateCorrected;
+  c->tempCorrected = &tempCorrected;
+  c->sysPressCorrected = &sysPressCorrected;
+  c->diaPressCorrected = &diaPressCorrected;
+  c->heartRateCorrected = &heartRateCorrected;
   
   //display
-  d->temp = *tempCorrected;
-  d->sysPress = *sysPressCorrected;
-  d->diaPress = *diaPressCorrected;
-  d->heartRate = *heartRateCorrected;
+  d->temp = &tempCorrected;
+  d->sysPress = &sysPressCorrected;
+  d->diaPress = &diaPressCorrected;
+  d->heartRate = &heartRateCorrected;
   d->batteryState = &batteryState;
   
   //status
