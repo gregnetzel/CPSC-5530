@@ -78,17 +78,17 @@ struct ComputeData{
   unsigned int* sysPressRaw;
   unsigned int* diaPressRaw;
   unsigned int* heartRateRaw;
-  unsigned char** tempCorrected;
-  unsigned char** sysPressCorrected;
-  unsigned char** diaPressCorrected;
-  unsigned char** heartRateCorrected;
+  unsigned char* tempCorrected;
+  unsigned char* sysPressCorrected;
+  unsigned char* diaPressCorrected;
+  unsigned char* heartRateCorrected;
 };typedef struct ComputeData ComputeData;
 
 struct Display{
-  unsigned char** temp;
-  unsigned char** sysPress;
-  unsigned char** diaPress;
-  unsigned char** heartRate;
+  unsigned char* temp;
+  unsigned char* sysPress;
+  unsigned char* diaPress;
+  unsigned char* heartRate;
   unsigned short* batteryState;
 };typedef struct Display Display;
 
@@ -299,10 +299,10 @@ void compute(void* data){
   d = (int)(6 + (1.5*d));
   h = 8 + (3*h);
   
-  intToStr((int)t, 4, *((ComputeData*)data)->tempCorrected);
-  intToStr(s, 3, *((ComputeData*)data)->sysPressCorrected);
-  intToStr((int)d, 5, *((ComputeData*)data)->diaPressCorrected);
-  intToStr(h, 3, *((ComputeData*)data)->heartRateCorrected);
+  //intToStr((int)t, 4, *((ComputeData*)data)->tempCorrected);
+  //intToStr(s, 3, *((ComputeData*)data)->sysPressCorrected);
+  //intToStr((int)d, 5, *((ComputeData*)data)->diaPressCorrected);
+  //intToStr(h, 3, *((ComputeData*)data)->heartRateCorrected);
 }
 
 void display(void* data){
@@ -443,16 +443,16 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
   c->sysPressRaw = &sysPressRaw;
   c->diaPressRaw = &diaPressRaw;
   c->heartRateRaw = &heartRateRaw;
-  c->tempCorrected = tempCorrected;
-  c->sysPressCorrected = sysPressCorrected;
-  c->diaPressCorrected = diaPressCorrected;
-  c->heartRateCorrected = heartRateCorrected;
+  c->tempCorrected = *tempCorrected;
+  c->sysPressCorrected = *sysPressCorrected;
+  c->diaPressCorrected = *diaPressCorrected;
+  c->heartRateCorrected = *heartRateCorrected;
   
   //display
-  d->temp = tempCorrected;
-  d->sysPress = sysPressCorrected;
-  d->diaPress = diaPressCorrected;
-  d->heartRate = heartRateCorrected;
+  d->temp = *tempCorrected;
+  d->sysPress = *sysPressCorrected;
+  d->diaPress = *diaPressCorrected;
+  d->heartRate = *heartRateCorrected;
   d->batteryState = &batteryState;
   
   //status

@@ -6,73 +6,78 @@
   <configuration>
     <name>Debug</name>
     <outputs>
-      <file>$PROJ_DIR$\Source\startup_ewarm.c</file>
-      <file>$PROJ_DIR$\Source\main.c</file>
-      <file>$TOOLKIT_DIR$\inc\yvals.h</file>
       <file>$TOOLKIT_DIR$\inc\string.h</file>
-      <file>$PROJ_DIR$\..\..\..\inc\hw_types.h</file>
-      <file>$TOOLKIT_DIR$\inc\stdlib.h</file>
-      <file>$TOOLKIT_DIR$\inc\DLib_Product.h</file>
-      <file>$TOOLKIT_DIR$\inc\xencoding_limits.h</file>
       <file>$TOOLKIT_DIR$\lib\shb_l.a</file>
-      <file>$PROJ_DIR$\Debug\Exe\LabOne.out</file>
-      <file>$PROJ_DIR$\..\..\..\inc\hw_memmap.h</file>
-      <file>$TOOLKIT_DIR$\inc\DLib_Config_Normal.h</file>
-      <file>$PROJ_DIR$\Debug\Obj\main.pbi</file>
       <file>$PROJ_DIR$\Debug\Obj\Project.pbd</file>
-      <file>$PROJ_DIR$\driverlib.a</file>
-      <file>$PROJ_DIR$\Source\rit128x96x4.c</file>
+      <file>$TOOLKIT_DIR$\inc\yvals.h</file>
+      <file>$PROJ_DIR$\..\..\..\inc\hw_memmap.h</file>
       <file>$TOOLKIT_DIR$\lib\dl7M_tl_in.a</file>
+      <file>$TOOLKIT_DIR$\inc\DLib_Config_Normal.h</file>
       <file>$TOOLKIT_DIR$\config\generic_cortex.icf</file>
-      <file>$TOOLKIT_DIR$\inc\stdio.h</file>
+      <file>$TOOLKIT_DIR$\inc\DLib_Product.h</file>
       <file>$PROJ_DIR$\Debug\Obj\rit128x96x4.o</file>
       <file>$TOOLKIT_DIR$\lib\rt7M_tl.a</file>
       <file>$PROJ_DIR$\..\drivers\rit128x96x4.h</file>
-      <file>$PROJ_DIR$\..\..\..\driverlib\debug.h</file>
-      <file>$PROJ_DIR$\Debug\Obj\startup_ewarm.o</file>
-      <file>$PROJ_DIR$\Debug\Obj\main.o</file>
-      <file>$PROJ_DIR$\..\..\..\driverlib\sysctl.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\main.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\stdio.h</file>
+      <file>$PROJ_DIR$\Debug\Exe\LabOne.out</file>
+      <file>$PROJ_DIR$\..\..\..\inc\hw_types.h</file>
+      <file>$TOOLKIT_DIR$\inc\stdlib.h</file>
+      <file>$TOOLKIT_DIR$\inc\xencoding_limits.h</file>
       <file>$PROJ_DIR$\..\..\..\inc\lm3s8962.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\main.o</file>
       <file>$PROJ_DIR$\..\..\..\driverlib\gpio.h</file>
+      <file>$PROJ_DIR$\driverlib.a</file>
+      <file>$PROJ_DIR$\Debug\Obj\startup_ewarm.o</file>
       <file>$TOOLKIT_DIR$\inc\DLib_Defaults.h</file>
       <file>$PROJ_DIR$\Debug\Obj\rit128x96x4.pbi</file>
       <file>$PROJ_DIR$\Debug\Obj\startup_ewarm.pbi</file>
+      <file>$PROJ_DIR$\Source\main.c</file>
+      <file>$PROJ_DIR$\Source\startup_ewarm.c</file>
+      <file>$PROJ_DIR$\Source\rit128x96x4.c</file>
+      <file>$PROJ_DIR$\..\..\..\driverlib\debug.h</file>
+      <file>$PROJ_DIR$\..\..\..\driverlib\sysctl.h</file>
       <file>$PROJ_DIR$\..\..\..\inc\hw_ssi.h</file>
       <file>$TOOLKIT_DIR$\inc\DLib_Threads.h</file>
-      <file>$TOOLKIT_DIR$\inc\DLib_Product_string.h</file>
-      <file>$PROJ_DIR$\..\..\..\inc\hw_sysctl.h</file>
       <file>$TOOLKIT_DIR$\inc\ysizet.h</file>
-      <file>$PROJ_DIR$\..\..\..\driverlib\ssi.h</file>
+      <file>$PROJ_DIR$\..\..\..\inc\hw_sysctl.h</file>
       <file>$TOOLKIT_DIR$\inc\ycheck.h</file>
+      <file>$TOOLKIT_DIR$\inc\DLib_Product_string.h</file>
+      <file>$PROJ_DIR$\..\..\..\driverlib\ssi.h</file>
     </outputs>
     <file>
       <name>[ROOT_NODE]</name>
       <outputs>
         <tool>
           <name>ILINK</name>
-          <file> 9</file>
+          <file> 14</file>
         </tool>
       </outputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\Source\startup_ewarm.c</name>
-      <outputs>
+      <name>$PROJ_DIR$\Debug\Obj\Project.pbd</name>
+      <inputs>
         <tool>
-          <name>ICCARM</name>
-          <file> 23</file>
+          <name>BILINK</name>
+          <file> 12 24 25</file>
         </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug\Exe\LabOne.out</name>
+      <inputs>
         <tool>
-          <name>BICOMP</name>
-          <file> 30</file>
+          <name>ILINK</name>
+          <file> 7 19 9 22 21 1 10 5</file>
         </tool>
-      </outputs>
+      </inputs>
     </file>
     <file>
       <name>$PROJ_DIR$\Source\main.c</name>
       <outputs>
         <tool>
           <name>ICCARM</name>
-          <file> 24</file>
+          <file> 19</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -82,52 +87,47 @@
       <inputs>
         <tool>
           <name>ICCARM</name>
-          <file> 18 37 2 28 11 6 7 32 35 5 3 33 26 21</file>
+          <file> 13 35 3 23 6 8 17 32 33 16 0 36 18 11</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 18 37 2 28 6 7 32 35 5 3 33 26 21</file>
+          <file> 13 35 3 23 8 17 32 33 16 0 36 18 11</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\Debug\Exe\LabOne.out</name>
-      <inputs>
+      <name>$PROJ_DIR$\Source\startup_ewarm.c</name>
+      <outputs>
         <tool>
-          <name>ILINK</name>
-          <file> 17 24 19 23 14 8 20 16</file>
+          <name>ICCARM</name>
+          <file> 22</file>
         </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\Debug\Obj\Project.pbd</name>
-      <inputs>
         <tool>
-          <name>BILINK</name>
-          <file> 12 29 30</file>
+          <name>BICOMP</name>
+          <file> 25</file>
         </tool>
-      </inputs>
+      </outputs>
     </file>
     <file>
       <name>$PROJ_DIR$\Source\rit128x96x4.c</name>
       <outputs>
         <tool>
           <name>ICCARM</name>
-          <file> 19</file>
+          <file> 9</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 29</file>
+          <file> 24</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICCARM</name>
-          <file> 31 10 34 4 22 27 36 25 21</file>
+          <file> 31 4 34 15 29 20 37 30 11</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 31 10 34 4 22 27 36 25 21</file>
+          <file> 31 4 34 15 29 20 37 30 11</file>
         </tool>
       </inputs>
     </file>
