@@ -179,12 +179,9 @@ int main(void)
       delay(10);
     }
 }
-//Measure, Compute, Display, Annunciate, Status, Schedule
-void measure(void* data){
-  //print("MEASURE RUNNING", 0, 3);
-  /* Access Data: ((type*)data)->member */
-  
-  //temperature 
+
+void measure(void* data){  
+                                                      //temperature 
   if(((Measurements*)data)->reverseTemp == FALSE){    //increasing pattern
     if( *((Measurements*)data)->temp > 50){
       ((Measurements*)data)->reverseTemp = TRUE;      //reverse pattern
@@ -216,12 +213,11 @@ void measure(void* data){
       }
     }
   }
-
-  //systolic/diatolic pressure NEED CONFIRMATION!!!
+                                                      //systolic/diatolic pressure
   if( ((Measurements*)data)->sysComplete == FALSE){   //run systolic
-    if( *((Measurements*)data)->sysPress > 100){       //systolic complete
+    if( *((Measurements*)data)->sysPress > 100){      //systolic complete
       ((Measurements*)data)->sysComplete = TRUE;      //run diatolic
-      *((Measurements*)data)->sysPress = 80;           //rest systolic
+      *((Measurements*)data)->sysPress = 80;          //rest systolic
       if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->diaPress += 2;
       }else{                                          //odd tick
@@ -235,9 +231,9 @@ void measure(void* data){
       }
     }
   }else{                                              //run diatolic
-    if( *((Measurements*)data)->sysPress < 40){        //diatolic complete
+    if( *((Measurements*)data)->sysPress < 40){       //diatolic complete
       ((Measurements*)data)->sysComplete = FALSE;     //run systolic
-      *((Measurements*)data)->diaPress = 80;           //reset diatolic
+      *((Measurements*)data)->diaPress = 80;          //reset diatolic
       if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->sysPress += 2;
       }else{                                          //odd tick
@@ -252,10 +248,10 @@ void measure(void* data){
     }
   }
   
-  //heartrate
-  if(((Measurements*)data)->reversePulse == FALSE){    //increasing pattern
+                                                      //heartrate
+  if(((Measurements*)data)->reversePulse == FALSE){   //increasing pattern
     if( *((Measurements*)data)->heartRate > 40){
-      ((Measurements*)data)->reversePulse = TRUE;      //reverse pattern
+      ((Measurements*)data)->reversePulse = TRUE;     //reverse pattern
       if(i%2 == 0){                                   //even tick
         *((Measurements*)data)->temp += 1;
       }else{                                          //odd tick
@@ -288,7 +284,6 @@ void measure(void* data){
 }
 
 void compute(void* data){
-  //print("COMPUTE RUNNING", 0, 4);
 
   float t = (float)*(((ComputeData*)data)->tempRaw);
   unsigned int s = *(((ComputeData*)data)->sysPressRaw);
