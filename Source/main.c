@@ -301,15 +301,14 @@ void compute(void* data){
 }
 
 void display(void* data){
-  //print("DISPLAY RUNNING", 0, 5);
-  //*((Display*)data)->member
+  
   volatile int t = *((Display*)data)->sysPress;
   intPrint(*((Display*)data)->sysPress,3,0,0);         //Systolic: should never be over 3 char
   print("/",3,0);
   intPrint(*((Display*)data)->diaPress,5,4,0);         //Diastolic: should never be over 5 char
   print("mm Hg",9,0);
   
-  fPrint(*((Display*)data)->temp,4,0,1);             //Temperature: should never be over 4 char
+  fPrint(*((Display*)data)->temp,4,0,1);               //Temperature: should never be over 4 char
   print("C",4,1);
   intPrint(*((Display*)data)->heartRate,3,6,1);        //Heartrate: should never be over 3 char
   print("BPM",9,1);
@@ -319,14 +318,13 @@ void display(void* data){
 }
 
 void annunciate(void* data){
-  //*((WarningAlarm*)data)->member
 
   float t = (float)*(((WarningAlarm*)data)->temp);
   unsigned int s = *(((WarningAlarm*)data)->sysPress);
   float d = (float)*(((WarningAlarm*)data)->diaPress);
   unsigned int h = *(((WarningAlarm*)data)->heartRate);
   short b = *(((WarningAlarm*)data)->batteryState);
-  int counter = 0; //for "alarm cycle"
+  int counter = 0;                                //for "alarm cycle"
   
   t = 5 + (0.75*t);
   s = 9 + (2*s);
@@ -334,8 +332,7 @@ void annunciate(void* data){
   h = 8 + (3*h);
   
   if(b < 40){
-    //flash light at 3 second interval
-    while(counter < 3) {
+    while(counter < 3) {                          //flash light at 3 second interval
       GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
       delay(30);
       GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
@@ -344,9 +341,8 @@ void annunciate(void* data){
     }
   }
   
-  if(t > 37.8 || t < 36.1){
-    //flash light at 1 second interval
-    while(counter < 3){
+  if(t > 37.8 || t < 36.1){                                                 
+    while(counter < 3){                           //flash light at 1 second interval
       GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
       delay(20);
       GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
@@ -356,8 +352,7 @@ void annunciate(void* data){
   }
   
   if(h > 100 || h < 60){
-    //flash light at 2 second interval
-    while(counter < 3){
+    while(counter < 3){                           //flash light at 2 second interval
       GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
       delay(40);
       GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
@@ -367,8 +362,7 @@ void annunciate(void* data){
   }
   
   if(s > 120 || s < 90 || d > 80 || d < 60){
-    //flash light at 0.5 second interval
-    while(counter < 3){
+    while(counter < 3){                           //flash light at 0.5 second interval
       GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
       delay(10);
       GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
@@ -377,21 +371,18 @@ void annunciate(void* data){
     }
   }
   
-  
-  // Turn on the LED for normal state.
-  GPIO_PORTF_DATA_R |= 0x01;
+  GPIO_PORTF_DATA_R |= 0x01;                     // Turn on the LED for normal state.
   
 }
 
 
 void status(void* data){
-  //print("STATUS RUNNING", 0, 7);
-  //unsigned short b = *((Status*)data)->batteryState;
+  
   *(((Status*)data)->batteryState)-= 1;              //decrement battery by 1
 }
 
 void schedule(void* data){
-  //print("SCHEDULE RUNNING", 0, 8);
+
   delay(10);
   i++;
 }
@@ -405,11 +396,11 @@ void delay(unsigned long aValue){
     return;
 }
 
-void print(char* c, int hOffset, int vOffset){// string, column, row
+void print(char* c, int hOffset, int vOffset){                        // string, column, row
   RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
 }
 
-void intPrint(int c, int size, int hOffset, int vOffset){// string, column, row
+void intPrint(int c, int size, int hOffset, int vOffset){             // string, column, row
   char dec[2];
   dec[1] = '\0';
   int rem = c;
@@ -435,8 +426,8 @@ void fPrint(float c, int size, int hOffset, int vOffset){
 }
 
 void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, WarningAlarm* w){
-  //measure
-  m->temp = &tempRaw;
+  
+  m->temp = &tempRaw;                                //measure
   m->sysPress = &sysPressRaw;
   m->diaPress = &diaPressRaw;
   m->heartRate = &heartRateRaw;
@@ -444,8 +435,7 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
   m->sysComplete = FALSE;
   m->reversePulse = FALSE;
   
-  //compute
-  c->tempRaw = &tempRaw;
+  c->tempRaw = &tempRaw;                              //compute
   c->sysPressRaw = &sysPressRaw;
   c->diaPressRaw = &diaPressRaw;
   c->heartRateRaw = &heartRateRaw;
@@ -454,25 +444,23 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
   c->diaPressCorrected = &diaPressCorrected;
   c->heartRateCorrected = &heartRateCorrected;
   
-  //display
-  d->temp = &tempCorrected;
+  d->temp = &tempCorrected;                           //display
   d->sysPress = &sysPressCorrected;
   d->diaPress = &diaPressCorrected;
   d->heartRate = &heartRateCorrected;
   d->batteryState = &batteryState;
   
-  //status
-  s->batteryState = &batteryState;
+  s->batteryState = &batteryState;                    //status
   
-  //warningAlarm
-  w->temp = &tempRaw;
+  w->temp = &tempRaw;                                 //warningAlarm
   w->sysPress = &sysPressRaw;
   w->diaPress = &diaPressRaw;
   w->heartRate = &heartRateRaw;
   w->batteryState = &batteryState;
 }
 
-void intToStr(int num, int size, unsigned char* str){//number, size, and memory location
+void intToStr(int num, int size, unsigned char* str){ //number, size, and memory location
+  
   str[size+1] = '\0';
   volatile int c;
   volatile int j;
