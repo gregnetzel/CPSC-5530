@@ -35,8 +35,7 @@
 
 volatile int i = 0;
 volatile unsigned long ulLoop;
-
-//Data Variables
+                                              //Data Variables
 unsigned int tempRaw = 70;
 unsigned int sysPressRaw = 80;
 unsigned int diaPressRaw = 80;
@@ -56,8 +55,7 @@ unsigned char tempOOR = '0';
 int bpHigh = FALSE;
 int tempHigh = FALSE;
 int pulseLow = FALSE;
-
-//Structs
+                                            //Structs
 struct MyStruct{
   void (*myTask)(void*);
   void* taskDataPtr;
@@ -103,8 +101,7 @@ struct WarningAlarm{
   unsigned int* heartRate;
   unsigned short* batteryState;
 };typedef struct WarningAlarm WarningAlarm;
-
-//functions
+                                                        //functions
 void delay(unsigned long aValue);
 void print(char* c, int hOffset, int vOffset);
 void measure(void* data);
@@ -120,35 +117,25 @@ void intPrint(int c, int size, int hOffset, int vOffset);
 void fPrint(float c, int size, int hOffset, int vOffset);
 //*****************************************************************************
 //
-// DESCRIPTION
+// Simulated Medical Device
 //
 //*****************************************************************************
 
 int main(void)
 {
-  //intitial data
+                                         //intitial data
     Measurements measurementData;
     ComputeData computeData;
     Display displayData;
     Status statusData;
     WarningAlarm warningAlarmData;
 
-    //
-    // Enable the GPIO port that is used for the on-board LED.
-    //
-    SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;
+    SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;  // Enable the GPIO port that is used for the on-board LED.
+
+    ulLoop = SYSCTL_RCGC2_R;              // Do a dummy read to insert a few cycles after enabling the peripheral.
   
-    //
-    // Do a dummy read to insert a few cycles after enabling the peripheral.
-    //
-    ulLoop = SYSCTL_RCGC2_R;
-  
-    //
-    // Enable the GPIO pin for the LED (PF0).  Set the direction as output, and
-    // enable the GPIO pin for digital function.
-    //
-    GPIO_PORTF_DIR_R = 0x01;
-    GPIO_PORTF_DEN_R = 0x01;
+    GPIO_PORTF_DIR_R = 0x01;              // Enable the GPIO pin for the LED (PF0).  Set the direction as output, and
+    GPIO_PORTF_DEN_R = 0x01;              // enable the GPIO pin for digital function.
     
     fillStructs(&measurementData, &computeData, &displayData, &statusData, 
                 &warningAlarmData);
