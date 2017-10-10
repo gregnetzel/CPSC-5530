@@ -28,7 +28,7 @@
 
 #include "inc/lm3s8962.h"
 #include "drivers/rit128x96x4.h"
-#define TRUE 1
+#define TRUE 1                               //used for display to OLED
 #define FALSE 0
 #define hSpacing 8
 #define vSpacing 14
