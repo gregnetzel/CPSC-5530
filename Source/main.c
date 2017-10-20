@@ -123,6 +123,17 @@ struct Communications {
 	unsigned int* pulseRateCorrectedBuff;
 }; typedef struct Communications Communications;
 
+class LinkedList {
+	TCB* head;
+	TCB* tail;
+public:
+	LinkedList() {
+		head = NULL;
+		tail = NULL;
+	}
+	void insert(TCB*);
+	void del(TCB**, TCB*);
+};
 //functions
 void delay(unsigned long aValue);
 void print(char* c, int hOffset, int vOffset);
@@ -506,4 +517,34 @@ void intToStr(int num, int size, unsigned char* str) { //number, size, and memor
 		str[size - j] = num % 10 + '0';
 		num /= 10;
 	}
+}
+
+void LinkedList::insert(TCB* node) {
+	if (NULL == this->head) {
+		this->head = node;
+		this->tail = node;
+	}
+	else {
+		this->tail->next = node;
+		node->prev = this->tail;
+		this->tail = node;
+	}
+	return;
+}
+
+void LinkedList::del(TCB **headRef, TCB* node) {	// might need to add while (headRef != node) or something
+	if (*headRef == NULL || node == NULL) {			// base case
+		return;
+	}
+	if (*headRef == node) {							// if node to be del is head
+		*headRef = node->next;
+	}
+	if (node->next != NULL) {						// if del node is not last node, change next
+		node->next->prev = node->prev;
+	}
+	if (node->prev != NULL) {						// if del node is not first node, change prev
+		node->prev->next = node->next;
+	}
+	free(node);
+	return;
 }
