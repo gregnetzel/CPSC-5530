@@ -339,7 +339,55 @@ void compute(void* data) {
 }
 
 void display(void* data) {
-/*
+  /*
+  TODO:
+    add field to data for Menu Mode vs Annunciate Mode vs menu options
+    print statements for menu options
+    print statements for heart rate, blood pressure, & temp
+  */
+  
+  /*  
+  if( ? ){  // Menu Mode
+    print("Menu", 0, 0);
+  
+    //  Blood Pressure hover
+    if( ? ){
+      print("* Blood Pressure        ", 0, 1);
+    }else{
+      print("  Blood Pressure        ", 0, 1);
+    }
+  
+    print("              ", 0, 2);  // clear row
+  
+    //  Temperature hover
+    if( ? ){
+      print("* Temperature", 0, 3);
+    }else{
+      print("  Temperature", 0, 3);
+    }
+  
+    //  Heart Rate hover
+    if( ? ){
+      print("* Heart Rate", 0, 5);
+    }else{
+      print("  Heart Rate", 0, 5);
+    }
+  }
+  */
+  
+  /*  Heart Rate Mode
+  
+  */
+  
+  /*  Blood Pressure Mode
+  
+  */
+  
+  /*  Temp Mode
+  
+  */
+
+  /*    Annunciate Mode
 	volatile int t = *((Display*)data)->sysPress;
 	intPrint(*((Display*)data)->sysPress, 3, 0, 0);         //Systolic: should never be over 3 char
 	print("/", 3, 0);
