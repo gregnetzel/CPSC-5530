@@ -37,7 +37,7 @@ volatile unsigned long ulLoop;
 
 //Enum
 enum displayMode { MENU_HOVER = 0, ANNUN_HOVER = 1, 
-                   HR_HOVER = 2, PB_HOVER = 3, 
+                   HR_HOVER = 2, BP_HOVER = 3, 
                   TEMP_HOVER = 4, ANNUNCIATE = 5, 
                   HR = 6, BP = 7, TEMP = 8};
 typedef enum displayMode displayMode;
@@ -346,64 +346,51 @@ void compute(void* data) {
 }
 
 void display(void* data) {
-
-  /*
-  TODO:
-    add field to data for Menu Mode vs Annunciate Mode vs menu options
-  */
   
-  /*
-  if( ? == MENU_HOVER || ? == ANNUN_HOVER ){  // mode selection
+  short m = *((Display*)data)->mode;
+  
+  if( m == MENU_HOVER || m == ANNUN_HOVER ){  // mode selection
     print("Please select a Mode:", 0, 0);
   
-    //  menu mode hover
-    if( ? == MENU_HOVER){
+    if( m == MENU_HOVER){//  menu mode hover
       print("* Menu", 0, 1);
     }else{
       print("  Menu", 0, 1);
     }
   
-    //  annunciate hover
-    if( ? == ANNUN_HOVER){
+    if( m == ANNUN_HOVER){//  annunciate hover
       print("* Annunciate", 0, 1);
     }else{
       print("  Annunciate", 0, 1);
     }
   }
-  */
-  
-  /*  
-  if( ? == BP_HOVER || ? == TEMP_HOVER || ? == HR_HOVER){  // Menu Mode
+   
+  if( m == BP_HOVER || m == TEMP_HOVER || m == HR_HOVER){  // Menu Mode
     print("Menu", 0, 0);
   
-    //  Blood Pressure hover
-    if( ? == BP_HOVER){
+    if( m == BP_HOVER){    //  Blood Pressure hover
       print("* Blood Pressure", 0, 1);
     }else{
       print("  Blood Pressure", 0, 1);
     }
   
-    //  Temperature hover
-    if( ? == TEMP_HOVER ){
+    if( m == TEMP_HOVER ){    //  Temperature hover
       print("* Temperature", 0, 3);
     }else{
       print("  Temperature", 0, 3);
     }
   
-    //  Heart Rate hover
-    if( ? == HR_HOVER ){
+    if( m == HR_HOVER ){//  Heart Rate hover
       print("* Heart Rate", 0, 5);
     }else{
       print("  Heart Rate", 0, 5);
     }
   }
-  */
-  
   /*
-  if( ? == BP || ? == HR || ? == TEMP){  // Menu option display
+  if( m == BP || m == HR || m == TEMP){  // Menu option display
     print("Menu", 0, 0);
     
-    if( ? == BP){  // Blood Pressure
+    if( m == BP){  // Blood Pressure
       print("Blood Pressure", 0, 1);
       volatile int t = *((Display*)data)->sysPress;
       intPrint(*((Display*)data)->sysPress, 3, 0, 2);         //Systolic: should never be over 3 char
@@ -412,22 +399,20 @@ void display(void* data) {
       print("mm Hg", 9, 2);
     }
   
-    if( ? == TEMP){  // temperature
+    if( m == TEMP){  // temperature
       print("Temperature", 0, 1);
       fPrint(*((Display*)data)->temp, 4, 0, 2);               //Temperature: should never be over 4 char
       print("C", 4, 2);
     }
     
-    if( ? == HR){  // heart rate
+    if( m == HR){  // heart rate
       print("Heart Rate", 0, 1);
       intPrint(*((Display*)data)->heartRate, 3, 0, 2);        //Heartrate: should never be over 3 char
       print("BPM", 3, 2);
     }
   }
-  */
-
-  /*    
-  if( ? == ANNUNCIATE){  // Annunciate Mode
+   
+  if( m == ANNUNCIATE){  // Annunciate Mode
     volatile int t = *((Display*)data)->sysPress;
     intPrint(*((Display*)data)->sysPress, 3, 0, 0);         //Systolic: should never be over 3 char
     print("/", 3, 0);
@@ -441,8 +426,7 @@ void display(void* data) {
 
     intPrint(*((Display*)data)->batteryState, 3, 13, 1);    //battery: should never be over 3 char
   }
-  */
-
+*/
 }
 
 void annunciate(void* data) {
