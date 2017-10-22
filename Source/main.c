@@ -26,7 +26,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include "inc/lm3s8962.h"
+#include "inc/hw_gpio.h"
+#include "inc/hw_ints.h"
+#include "inc/hw_memmap.h"
+#include "inc/hw_types.h"
+#include "driverlib/debug.h"
+#include "driverlib/gpio.h"
+#include "driverlib/interrupt.h"
+#include "driverlib/sysctl.h"
 #include "drivers/rit128x96x4.h"
+
 #define TRUE 1                               //used for display to OLED
 #define FALSE 0
 #define hSpacing 8
@@ -44,11 +53,11 @@ typedef enum displayMode displayMode;
 
 //Data Variables
 unsigned int tempRawBuff[8];
-unsigned int bloodPressRawBuff[16];			//sys in first half, dia in second (or something else).
+unsigned int bloodPressRawBuff[16];	//sys in first half, dia in second (or something else).
 unsigned int pulseRateRawBuff[8];
 
 float tempCorrectedBuff[8];
-unsigned int bloodPressCorrectedBuff[16];	//same comment as line 45
+unsigned int bloodPressCorrectedBuff[16];//same comment as line 45
 unsigned int pulseRateCorrectedBuff[8];
 
 // Keypad additions
@@ -134,6 +143,29 @@ struct Communications {
 	unsigned int* pulseRateCorrectedBuff;
 }; typedef struct Communications Communications;
 
+//flags
+volatile int upPressed = 0;
+volatile int downPressed = 0;
+volatile int selectPressed = 0;
+
+//interrupts
+void selectPressedHandler(void){//port F pin 1
+  GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_1);
+  selectPressed = 1;
+}
+void dirPressedHandler(void){//port E pins 0-3 up down left right
+  volatile long testUp = GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_0);
+  volatile long testDown = GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_1);
+  if(testDown == 0){
+    GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_1);
+    downPressed = 1;
+  }
+  if(testUp == 0){
+    GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_0);
+    upPressed = 1;
+  }
+}
+
 //functions
 void delay(unsigned long aValue);
 void print(char* c, int hOffset, int vOffset);
@@ -165,41 +197,55 @@ int main(void)
 	WarningAlarm warningAlarmData;
 	Keypad keypadData;
 	Communications communicationsData;
-
+        
+        SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
+                   SYSCTL_XTAL_8MHZ);
+        /*
+        //light enable
 	SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;  // Enable the GPIO port that is used for the on-board LED.
-
 	ulLoop = SYSCTL_RCGC2_R;              // Do a dummy read to insert a few cycles after enabling the peripheral.
-
 	GPIO_PORTF_DIR_R = 0x01;              // Enable the GPIO pin for the LED (PF0).  Set the direction as output, and
 	GPIO_PORTF_DEN_R = 0x01;              // enable the GPIO pin for digital function.
+        */
+        //up down buttons enabled
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+        GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+        GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_STRENGTH_2MA,
+                     GPIO_PIN_TYPE_STD_WPU);
+        GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_FALLING_EDGE);
+        GPIOPinIntEnable(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+        IntEnable(INT_GPIOE);
+        //select button
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+        GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_1);
+        GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,
+                     GPIO_PIN_TYPE_STD_WPU);
+        GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_FALLING_EDGE);
+        GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_1);
+        IntEnable(INT_GPIOF);
 
 	fillStructs(&measurementData, &computeData, &displayData, &statusData,
 		&warningAlarmData, &keypadData, &communicationsData);
 
-	RIT128x96x4Init(1000000); //crashes here for some reason
-	TCB taskManager[6];
-	taskManager[0].myTask = measure;
-	taskManager[1].myTask = compute;
-	taskManager[2].myTask = display;
-	taskManager[3].myTask = annunciate;
-	taskManager[4].myTask = status;
-	taskManager[5].myTask = schedule;
-
-	taskManager[0].taskDataPtr = &measurementData;
-	taskManager[1].taskDataPtr = &computeData;
-	taskManager[2].taskDataPtr = &displayData;
-	taskManager[3].taskDataPtr = &warningAlarmData;
-	taskManager[4].taskDataPtr = &statusData;
-	taskManager[5].taskDataPtr = NULL;
+	RIT128x96x4Init(1000000); 
+        /*
+	TCB tasks[6];   //make all tasks
+	tasks[0].myTask = measure;
+	tasks[1].myTask = compute;
+	tasks[2].myTask = display;
+	tasks[3].myTask = annunciate;
+	tasks[4].myTask = status;
+	tasks[5].myTask = schedule;
+	tasks[0].taskDataPtr = &measurementData;
+	tasks[1].taskDataPtr = &computeData;
+	tasks[2].taskDataPtr = &displayData;
+	tasks[3].taskDataPtr = &warningAlarmData;
+	tasks[4].taskDataPtr = &statusData;
+	tasks[5].taskDataPtr = NULL;
+        */
 	while (TRUE)
 	{
-		/*taskManager[0].myTask(taskManager[0].taskDataPtr);
-		taskManager[1].myTask(taskManager[1].taskDataPtr);
-		taskManager[2].myTask(taskManager[2].taskDataPtr);
-		taskManager[3].myTask(taskManager[3].taskDataPtr);
-		taskManager[4].myTask(taskManager[4].taskDataPtr);
-		taskManager[5].myTask(taskManager[5].taskDataPtr);
-		*/
+		
 	}
 }
 
@@ -523,7 +569,7 @@ void intPrint(int c, int size, int hOffset, int vOffset) {             // string
 		RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
 	}
 }
-void fPrint(float c, int size, int hOffset, int vOffset) {
+void fPrint(float c, int size, int hOffset, int vOffset) {//found a clear command haven't tested it yet RIT128x96x4Clear()
 	char dec[2];
 	dec[1] = '\0';
 	int rem = (int)c * 10;
