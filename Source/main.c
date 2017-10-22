@@ -36,8 +36,10 @@ volatile int i = 0;
 volatile unsigned long ulLoop;
 
 //Enum
-enum displayMode { MENU_HOVER, ANNUN_HOVER, HR_HOVER, PB_HOVER, 
-                  TEMP_HOVER, ANNUNCIATE, HR, BP, TEMP};
+enum displayMode { MENU_HOVER = 0, ANNUN_HOVER = 1, 
+                   HR_HOVER = 2, PB_HOVER = 3, 
+                  TEMP_HOVER = 4, ANNUNCIATE = 5, 
+                  HR = 6, BP = 7, TEMP = 8};
 typedef enum displayMode displayMode;
 
 //Data Variables
