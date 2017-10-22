@@ -35,6 +35,11 @@
 volatile int i = 0;
 volatile unsigned long ulLoop;
 
+//Enum
+enum displayMode { MENU_HOVER, ANNUN_HOVER, HR_HOVER, PB_HOVER, 
+                  TEMP_HOVER, ANNUNCIATE, HR, BP, TEMP};
+typedef enum displayMode displayMode;
+
 //Data Variables
 unsigned int tempRawBuff[8];
 unsigned int bloodPressRawBuff[16];			//sys in first half, dia in second (or something else).
@@ -339,31 +344,52 @@ void compute(void* data) {
 }
 
 void display(void* data) {
+
   /*
   TODO:
     add field to data for Menu Mode vs Annunciate Mode vs menu options
   */
   
+  /*
+  if( ? == MENU_HOVER || ? == ANNUN_HOVER ){  // mode selection
+    print("Please select a Mode:", 0, 0);
+  
+    //  menu mode hover
+    if( ? == MENU_HOVER){
+      print("* Menu", 0, 1);
+    }else{
+      print("  Menu", 0, 1);
+    }
+  
+    //  annunciate hover
+    if( ? == ANNUN_HOVER){
+      print("* Annunciate", 0, 1);
+    }else{
+      print("  Annunciate", 0, 1);
+    }
+  }
+  */
+  
   /*  
-  if( ? ){  // Menu Mode
+  if( ? == BP_HOVER || ? == TEMP_HOVER || ? == HR_HOVER){  // Menu Mode
     print("Menu", 0, 0);
   
     //  Blood Pressure hover
-    if( ? ){
+    if( ? == BP_HOVER){
       print("* Blood Pressure", 0, 1);
     }else{
       print("  Blood Pressure", 0, 1);
     }
   
     //  Temperature hover
-    if( ? ){
+    if( ? == TEMP_HOVER ){
       print("* Temperature", 0, 3);
     }else{
       print("  Temperature", 0, 3);
     }
   
     //  Heart Rate hover
-    if( ? ){
+    if( ? == HR_HOVER ){
       print("* Heart Rate", 0, 5);
     }else{
       print("  Heart Rate", 0, 5);
@@ -372,10 +398,10 @@ void display(void* data) {
   */
   
   /*
-  if( ? ){  // Menu option display
+  if( ? == BP || ? == HR || ? == TEMP){  // Menu option display
     print("Menu", 0, 0);
     
-    if( ? ){  // Blood Pressure
+    if( ? == BP){  // Blood Pressure
       print("Blood Pressure", 0, 1);
       volatile int t = *((Display*)data)->sysPress;
       intPrint(*((Display*)data)->sysPress, 3, 0, 2);         //Systolic: should never be over 3 char
@@ -384,13 +410,13 @@ void display(void* data) {
       print("mm Hg", 9, 2);
     }
   
-    if( ? ){  // temperature
+    if( ? == TEMP){  // temperature
       print("Temperature", 0, 1);
       fPrint(*((Display*)data)->temp, 4, 0, 2);               //Temperature: should never be over 4 char
       print("C", 4, 2);
     }
     
-    if( ? ){  // heart rate
+    if( ? == HR){  // heart rate
       print("Heart Rate", 0, 1);
       intPrint(*((Display*)data)->heartRate, 3, 0, 2);        //Heartrate: should never be over 3 char
       print("BPM", 3, 2);
@@ -399,7 +425,7 @@ void display(void* data) {
   */
 
   /*    
-  if( ? ){  // Annunciate Mode
+  if( ? == ANNUNCIATE){  // Annunciate Mode
     volatile int t = *((Display*)data)->sysPress;
     intPrint(*((Display*)data)->sysPress, 3, 0, 0);         //Systolic: should never be over 3 char
     print("/", 3, 0);
