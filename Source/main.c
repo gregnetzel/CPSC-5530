@@ -103,7 +103,7 @@ struct ComputeData {
 
 struct Display {
 	float* tempCorrectedBuff;
-	unsigned int* bloodPressCorrectedBuf;
+	unsigned int* bloodPressCorrectedBuff;
 	unsigned int* pulseRateCorrectedBuff;
 	unsigned short* batteryState;
 	unsigned short* mode;
@@ -386,47 +386,48 @@ void display(void* data) {
       print("  Heart Rate", 0, 5);
     }
   }
-  /*
+  
   if( m == BP || m == HR || m == TEMP){  // Menu option display
     print("Menu", 0, 0);
     
     if( m == BP){  // Blood Pressure
       print("Blood Pressure", 0, 1);
-      volatile int t = *((Display*)data)->sysPress;
-      intPrint(*((Display*)data)->sysPress, 3, 0, 2);         //Systolic: should never be over 3 char
+      volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
+      intPrint(*((Display*)data)->bloodPressCorrectedBuff, 3, 0, 2);         //Systolic: should never be over 3 char
       print("/", 3, 2);
-      intPrint(*((Display*)data)->diaPress, 5, 4, 2);         //Diastolic: should never be over 5 char
+      intPrint(*((Display*)data)->bloodPressCorrectedBuff, 5, 4, 2);         //Diastolic: should never be over 5 char
       print("mm Hg", 9, 2);
     }
   
     if( m == TEMP){  // temperature
-      print("Temperature", 0, 1);
-      fPrint(*((Display*)data)->temp, 4, 0, 2);               //Temperature: should never be over 4 char
+      print("Temperature:", 0, 1);
+      fPrint(*((Display*)data)->tempCorrectedBuff, 4, 0, 2);               //Temperature: should never be over 4 char
       print("C", 4, 2);
     }
     
     if( m == HR){  // heart rate
-      print("Heart Rate", 0, 1);
-      intPrint(*((Display*)data)->heartRate, 3, 0, 2);        //Heartrate: should never be over 3 char
+      print("Heart Rate:", 0, 1);
+      intPrint(*((Display*)data)->pulseRateCorrectedBuff, 3, 0, 2);        //Heartrate: should never be over 3 char
       print("BPM", 3, 2);
     }
   }
    
   if( m == ANNUNCIATE){  // Annunciate Mode
-    volatile int t = *((Display*)data)->sysPress;
-    intPrint(*((Display*)data)->sysPress, 3, 0, 0);         //Systolic: should never be over 3 char
+    print("Annunciate:", 0, 0);
+    volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
+    intPrint(*((Display*)data)->bloodPressCorrectedBuff, 3, 0, 0);         //Systolic: should never be over 3 char
     print("/", 3, 0);
-    intPrint(*((Display*)data)->diaPress, 5, 4, 0);         //Diastolic: should never be over 5 char
+    intPrint(*((Display*)data)->bloodPressCorrectedBuff, 5, 4, 0);         //Diastolic: should never be over 5 char
     print("mm Hg", 9, 0);
 
-    fPrint(*((Display*)data)->temp, 4, 0, 1);               //Temperature: should never be over 4 char
+    fPrint(*((Display*)data)->tempCorrectedBuff, 4, 0, 1);               //Temperature: should never be over 4 char
     print("C", 4, 1);
-    intPrint(*((Display*)data)->heartRate, 3, 6, 1);        //Heartrate: should never be over 3 char
+    intPrint(*((Display*)data)->pulseRateCorrectedBuff, 3, 6, 1);        //Heartrate: should never be over 3 char
     print("BPM", 9, 1);
 
     intPrint(*((Display*)data)->batteryState, 3, 13, 1);    //battery: should never be over 3 char
   }
-*/
+
 }
 
 void annunciate(void* data) {
@@ -554,7 +555,7 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
 	c->pulseRateCorrectedBuff = &pulseRateCorrectedBuff[0];
 
 	d->tempCorrectedBuff = &tempCorrectedBuff[0];                           //display
-	d->bloodPressCorrectedBuf = &bloodPressCorrectedBuff[0];
+	d->bloodPressCorrectedBuff = &bloodPressCorrectedBuff[0];
 	d->pulseRateCorrectedBuff = &pulseRateCorrectedBuff[0];
 	d->batteryState = &batteryState;
 	d->mode = &mode;
