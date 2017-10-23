@@ -33,6 +33,7 @@
 #include "driverlib/debug.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
+#include "driverlib/systick.h"
 #include "driverlib/sysctl.h"
 #include "drivers/rit128x96x4.h"
 
@@ -43,6 +44,7 @@
 
 volatile int i = 0;
 volatile unsigned long ulLoop;
+volatile unsigned long time = 0; //in tenths of seconds
 
 //Enum
 enum displayMode { MENU_HOVER = 0, ANNUN_HOVER = 1, 
@@ -148,6 +150,7 @@ struct Communications {
 volatile int upPressed = 0;
 volatile int downPressed = 0;
 volatile int selectPressed = 0;
+volatile int addFlags[] = {0,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
 
 //interrupts
 void selectPressedHandler(void){//port F pin 1
@@ -188,10 +191,15 @@ TCB* llDequeue(LinkedList* ll);
 //
 //*****************************************************************************
 
+LinkedList taskQueue;
+
 int main(void)
 {
         SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
                    SYSCTL_XTAL_8MHZ);
+        SysTickPeriodSet(SysCtlClockGet());
+        SysTickEnable();
+        
 	//intitial data
 	Measurements measurementData;
 	ComputeData computeData;
@@ -200,7 +208,22 @@ int main(void)
 	WarningAlarm warningAlarmData;
 	Keypad keypadData;
 	Communications communicationsData;
-        TCB* tasks = malloc(8*sizeof(TCB));
+        
+        TCB* tasks = malloc(8*sizeof(TCB));   //array to hold tasks when not in queue
+        tasks[0].myTask = measure;
+	tasks[1].myTask = compute;
+        tasks[2].myTask = display;
+	tasks[3].myTask = annunciate;
+	tasks[4].myTask = status;
+	tasks[5].myTask = schedule;
+	tasks[0].taskDataPtr = &measurementData;
+	tasks[1].taskDataPtr = &computeData;
+	tasks[2].taskDataPtr = &displayData;
+	tasks[3].taskDataPtr = &warningAlarmData;
+	tasks[4].taskDataPtr = &statusData;
+	tasks[5].taskDataPtr = NULL;
+        
+        
         
         //light enable
 	SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;  // Enable the GPIO port that is used for the on-board LED.
@@ -217,7 +240,7 @@ int main(void)
         GPIOPinIntEnable(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1);
         IntEnable(INT_GPIOE);
         
-        //select button for some reason on same port as light
+        //select button (for some reason on same port as light which is annoying)
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
         GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_1);
         GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,
@@ -229,25 +252,18 @@ int main(void)
 	fillStructs(&measurementData, &computeData, &displayData, &statusData,
 		&warningAlarmData, &keypadData, &communicationsData);
 
-	RIT128x96x4Init(1000000); 
-        
-                
-        tasks[0].myTask = measure;
-	tasks[1].myTask = compute;
-        tasks[2].myTask = display;
-	tasks[3].myTask = annunciate;
-	tasks[4].myTask = status;
-	tasks[5].myTask = schedule;
-	tasks[0].taskDataPtr = &measurementData;
-	tasks[1].taskDataPtr = &computeData;
-	tasks[2].taskDataPtr = &displayData;
-	tasks[3].taskDataPtr = &warningAlarmData;
-	tasks[4].taskDataPtr = &statusData;
-	tasks[5].taskDataPtr = NULL;
-        
-        //tasks[2].myTask(tasks[2].taskDataPtr);
+	RIT128x96x4Init(1000000);
+        TCB* activeTask;
 	while (TRUE)
 	{
+            tasks[5].myTask(tasks[5].taskDataPtr);//Schedule task
+            activeTask = llDequeue(&taskQueue);
+            while(activeTask != NULL){//queue isn't empty
+              activeTask->myTask(activeTask->taskDataPtr);
+              activeTask = llDequeue(&taskQueue);
+            }
+            tasks[2].myTask(tasks[2].taskDataPtr);//Display
+            intPrint(upPressed,1,0, 4);
 	}
 }
 //Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, Local Communications, and Schedule
@@ -543,18 +559,26 @@ void status(void* data) {
 }
 
 void schedule(void* data) {
-
-	delay(10);
+	delay(1);
 	i++;
+        time++;
+        if(time%10 == 0){//whole seconds
+          if((time%10)%2 == 0){//even seconds
+            //
+          }
+          if((time%10)%3 == 0){//every 3 seconds
+            //
+          }
+        }
 }
 
 void delay(unsigned long aValue) {
-	volatile unsigned long i = 0;
-	volatile int j = 0;
-	for (i = aValue; i > 0; i--) {
-		for (j = 0; j < 100000; j++);
-	}
-	return;
+    while(aValue--){
+        while(SysTickValueGet() > 1000){
+        }
+        while(SysTickValueGet() < 1000){
+        }
+    }
 }
 
 void print(char* c, int hOffset, int vOffset) {                        // string, column, row
