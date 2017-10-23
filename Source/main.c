@@ -688,13 +688,17 @@ void annunciate(void* data) {
                     delay(10);
                     counter++;
             }
+            bpHigh = TRUE;
+    }else{
+      bpHigh = FALSE;
     }
 
-    if(s > 144){
-      unsigned long t = time % 10; 
-      PWMGenEnable(PWM_BASE, PWM_GEN_0);
-      while(time % 10 != t){}
-      PWMGenDisable(PWM_BASE, PWM_GEN_0);
+    if(s > 144 && bpHigh == TRUE){
+      if(time % 10 == 0){ 
+        PWMGenEnable(PWM_BASE, PWM_GEN_0);
+        while(time % 10 != 0){}
+        PWMGenDisable(PWM_BASE, PWM_GEN_0);
+      }
     }
     
     GPIO_PORTF_DATA_R |= 0x01;                     // Turn on the LED for normal state.
