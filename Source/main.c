@@ -36,7 +36,11 @@
 #include "driverlib/systick.h"
 #include "driverlib/sysctl.h"
 #include "drivers/rit128x96x4.h"
+<<<<<<< HEAD
 #include  <utils/uartstdio.c>
+=======
+#include "driverlib/pwm.h"
+>>>>>>> c87cfdca997f4939cf8fd671ed1a20ac27626666
 
 #define TRUE 1                               //used for display to OLED
 #define FALSE 0
@@ -189,6 +193,7 @@ void status(void* data);
 void schedule(void* data);
 void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s,
 	WarningAlarm* w, Keypad* k, Communications* z);
+void fillBuffers();
 void intPrint(int c, int size, int hOffset, int vOffset);
 void fPrint(float c, int size, int hOffset, int vOffset);
 void llEnqueue(LinkedList* ll, TCB* task);
@@ -232,7 +237,9 @@ int main(void)
 	tasks[4].taskDataPtr = &statusData;
 	tasks[5].taskDataPtr = NULL;
         
-        
+        TCB* activeTask;
+        fillBuffers();
+	RIT128x96x4Init(1000000); 
         
         //light enable
 	SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;  // Enable the GPIO port that is used for the on-board LED.
@@ -269,11 +276,22 @@ int main(void)
         GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_1);
         IntEnable(INT_GPIOF);
 
+        // speaker
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+        GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0);
+        GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1);
+        unsigned long ulPeriod = SysCtlClockGet() / 440;
+        PWMGenConfigure(PWM_BASE, PWM_GEN_0,
+                    PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
+        PWMGenPeriodSet(PWM_BASE, PWM_GEN_0, ulPeriod);
+        PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, ulPeriod / 4);
+        PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
+        
 	fillStructs(&measurementData, &computeData, &displayData, &statusData,
 		&warningAlarmData, &keypadData, &communicationsData);
-
-	RIT128x96x4Init(1000000);
-        TCB* activeTask;
+        
 	while (TRUE)
 	{
             tasks[5].myTask(tasks[5].taskDataPtr);//Schedule task
@@ -285,6 +303,7 @@ int main(void)
             tasks[2].myTask(tasks[2].taskDataPtr);//Display
 	}
 }
+<<<<<<< HEAD
 
 //Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, SerialCommunications, and Schedule
 
@@ -305,145 +324,149 @@ void SerialCommunications(void* data){
 }
 
 void measure(void* data) {/*
+=======
+//Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, Local Communications, and Schedule
+void measure(void* data) {
+>>>>>>> c87cfdca997f4939cf8fd671ed1a20ac27626666
 	//temperature
 	if (((Measurements*)data)->reverseTemp == FALSE) {    //increasing pattern
-		if (*((Measurements*)data)->temp > 50) {
+		if (((Measurements*)data)->tempRawBuff[0] > 50) {
 			((Measurements*)data)->reverseTemp = TRUE;      //reverse pattern
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->temp -= 2;
+				((Measurements*)data)->tempRawBuff[0] -= 2;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->temp += 1;
+				((Measurements*)data)->tempRawBuff[0] += 1;
 			}
 		}
 		else {
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->temp += 2;
+				((Measurements*)data)->tempRawBuff[0] += 2;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->temp -= 1;
+				((Measurements*)data)->tempRawBuff[0] -= 1;
 			}
 		}
 	}
 	else {                                              //decreasing pattern
-		if (*((Measurements*)data)->temp < 15) {
+		if (*((Measurements*)data)->tempRawBuff < 15) {
 			((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->temp += 2;
+				((Measurements*)data)->tempRawBuff[0] += 2;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->temp -= 1;
+				((Measurements*)data)->tempRawBuff[0] -= 1;
 			}
 		}
 		else {
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->temp -= 2;
+				((Measurements*)data)->tempRawBuff[0] -= 2;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->temp += 1;
+				((Measurements*)data)->tempRawBuff[0] += 1;
 			}
 		}
 	}
 	//systolic/diastolic pressure
 	if (((Measurements*)data)->sysComplete == FALSE) {   //run systolic
-		if (*((Measurements*)data)->sysPress > 100) {      //systolic complete
+		if (((Measurements*)data)->bloodPressRawBuff[0] > 100) {      //systolic complete
 			((Measurements*)data)->sysComplete = TRUE;      //run diatolic
-			*((Measurements*)data)->sysPress = 80;          //rest systolic
+			((Measurements*)data)->bloodPressRawBuff[0] = 80;          //rest systolic
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->diaPress += 2;
+				((Measurements*)data)->bloodPressRawBuff[8] += 2;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->diaPress -= 1;
+				((Measurements*)data)->bloodPressRawBuff[8] -= 1;
 			}
 		}
 		else {
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->sysPress += 2;
+				((Measurements*)data)->bloodPressRawBuff[0] += 2;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->sysPress -= 1;
+				((Measurements*)data)->bloodPressRawBuff[0] -= 1;
 			}
 		}
 	}
 	else {                                              //run diatolic
-		if (*((Measurements*)data)->sysPress < 40) {       //diatolic complete
+		if (((Measurements*)data)->bloodPressRawBuff[0] < 40) {       //diatolic complete
 			((Measurements*)data)->sysComplete = FALSE;     //run systolic
-			*((Measurements*)data)->diaPress = 80;          //reset diatolic
+			((Measurements*)data)->bloodPressRawBuff[8] = 80;          //reset diatolic
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->sysPress += 2;
+				((Measurements*)data)->bloodPressRawBuff[0] += 2;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->sysPress -= 1;
+				((Measurements*)data)->bloodPressRawBuff[0] -= 1;
 			}
 		}
 		else {
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->diaPress += 2;
+				((Measurements*)data)->bloodPressRawBuff[8] += 2;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->diaPress -= 1;
+				((Measurements*)data)->bloodPressRawBuff[8] -= 1;
 			}
 		}
 	}
 
 	//heartrate
 	if (((Measurements*)data)->reversePulse == FALSE) {   //increasing pattern
-		if (*((Measurements*)data)->heartRate > 40) {
+		if (((Measurements*)data)->pulseRateRawBuff[0] > 40) {
 			((Measurements*)data)->reversePulse = TRUE;     //reverse pattern
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->temp += 1;
+				((Measurements*)data)->pulseRateRawBuff[0] += 1;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->temp -= 3;
+				((Measurements*)data)->pulseRateRawBuff[0] -= 3;
 			}
 		}
 		else {
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->temp -= 1;
+				((Measurements*)data)->pulseRateRawBuff[0] -= 1;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->temp += 3;
+				((Measurements*)data)->pulseRateRawBuff[0] += 3;
 			}
 		}
 	}
 	else {                                              //decreasing pattern
-		if (*((Measurements*)data)->heartRate < 15) {
+		if (((Measurements*)data)->pulseRateRawBuff[0] < 15) {
 			((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->temp -= 1;
+				((Measurements*)data)->pulseRateRawBuff[0] -= 1;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->temp += 3;
+				((Measurements*)data)->pulseRateRawBuff[0] += 3;
 			}
 		}
 		else {
 			if (i % 2 == 0) {                                   //even tick
-				*((Measurements*)data)->temp += 1;
+				((Measurements*)data)->pulseRateRawBuff[0] += 1;
 			}
 			else {                                          //odd tick
-				*((Measurements*)data)->temp -= 3;
+				((Measurements*)data)->pulseRateRawBuff[0] -= 3;
 			}
 		}
 	}
-*/
+
 }
 
 void compute(void* data) {
-/*
-	float t = (float)*(((ComputeData*)data)->tempRaw);
-	unsigned int s = *(((ComputeData*)data)->sysPressRaw);
-	float d = (float)*(((ComputeData*)data)->diaPressRaw);
-	unsigned int h = *(((ComputeData*)data)->heartRateRaw);
+	float t = (float)(((ComputeData*)data)->tempRawBuff[0]);
+	unsigned int s = (((ComputeData*)data)->bloodPressRawBuff[0]);
+	unsigned int d = (((ComputeData*)data)->bloodPressRawBuff[0]); 
+	unsigned int h = (((ComputeData*)data)->pulseRateRawBuff[0]);
 
 	t = (5 + (0.75*t));
 	s = 9 + (2 * s);
 	d = (int)(6 + (1.5*d));
 	h = 8 + (3 * h);
-	*((ComputeData*)data)->tempCorrected = t;
-	*((ComputeData*)data)->sysPressCorrected = s;
-	*((ComputeData*)data)->diaPressCorrected = (int)d;
-	*((ComputeData*)data)->heartRateCorrected = h;
-  */
+	((ComputeData*)data)->tempCorrectedBuff[0] = t;
+	((ComputeData*)data)->bloodPressCorrectedBuff[0] = s;
+	((ComputeData*)data)->bloodPressCorrectedBuff[0] = d;
+	((ComputeData*)data)->pulseRateCorrectedBuff[0] = h;
+        
+        //maybe have a function to increment all pointers.
 }
 
 /*MENU_HOVER = 0, ANNUN_HOVER = 1,
@@ -623,6 +646,9 @@ void display(void* data) {
 
 void annunciate(void* data) {/*
 
+  PWMGenEnable(PWM_BASE, PWM_GEN_0);
+  PWMGenDisable(PWM_BASE, PWM_GEN_0);
+  
 	float t = (float)*(((WarningAlarm*)data)->temp);
 	unsigned int s = *(((WarningAlarm*)data)->sysPress);
 	float d = (float)*(((WarningAlarm*)data)->diaPress);
@@ -777,6 +803,14 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
         z->batteryState  = &batteryState;
 }
 
+void fillBuffers() {
+  for(int i = 0; i < 8; i++) {
+    tempRawBuff[i] = 75;
+    bloodPressRawBuff[i] = 80;
+    bloodPressRawBuff[i+7] = 80;
+    pulseRateRawBuff[i] = 0;
+  }
+}
 void llEnqueue(LinkedList* ll, TCB* task){
 	if (NULL == ll->head){
   		ll->head = task;
