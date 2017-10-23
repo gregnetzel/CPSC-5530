@@ -36,6 +36,7 @@
 #include "driverlib/systick.h"
 #include "driverlib/sysctl.h"
 #include "drivers/rit128x96x4.h"
+#include  <utils/uartstdio.c>
 
 #define TRUE 1                               //used for display to OLED
 #define FALSE 0
@@ -55,11 +56,11 @@ typedef enum displayMode displayMode;
 
 //Data Variables
 unsigned int tempRawBuff[8];
-unsigned int bloodPressRawBuff[16];	//sys in first half, dia in second (or something else).
+unsigned int bloodPressRawBuff[16];	//sys in first half, dia in second.
 unsigned int pulseRateRawBuff[8];
 
 float tempCorrectedBuff[8];
-unsigned int bloodPressCorrectedBuff[16];//same comment as line 45
+unsigned int bloodPressCorrectedBuff[16];//sys in first half, dia in second
 unsigned int pulseRateCorrectedBuff[8];
 
 // Keypad additions
@@ -144,11 +145,13 @@ struct Communications {
 	float *tempCorrectedBuff;
 	unsigned int* bloodPressCorrectedBuff;
 	unsigned int* pulseRateCorrectedBuff;
+        unsigned short* batteryState;
 }; typedef struct Communications Communications;
 
 //flags
 volatile int upPressed = 0;
 volatile int downPressed = 0;
+volatile int leftPressed = 0;
 volatile int selectPressed = 0;
 volatile int addFlags[] = {0,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
 
@@ -160,14 +163,19 @@ void selectPressedHandler(void){//port F pin 1
 void dirPressedHandler(void){//port E pins 0-3 up down left right
   volatile long testUp = GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_0);
   volatile long testDown = GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_1);
+  volatile long testLeft = GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_2);
   if(testDown == 0){
     downPressed = 1;
   }
   else if(testUp == 0){
     upPressed = 1;
   }
+  else if(testLeft == 0){
+    leftPressed = 1;
+  }
   GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_1);
   GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_0);
+  GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_2);
 }
 
 //functions
@@ -232,13 +240,24 @@ int main(void)
 	GPIO_PORTF_DIR_R = 0x01;              // Enable the GPIO pin for the LED (PF0).  Set the direction as output, and
 	GPIO_PORTF_DEN_R = 0x01;              // enable the GPIO pin for digital function.
         
+        //uart enable for serial comm
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+        GPIOPinConfigure(GPIO_PA0_U0RX);
+	GPIOPinConfigure(GPIO_PA1_U0TX);
+
+	GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);
+	IntEnable(INT_UART0);
+	UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
+	UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200, UART_CONFIG_WLEN_8|UART_CONFIG_PAR_NONE|UART_CONFIG_STOP_ONE);
+        
         //up down buttons enabled
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
-        GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1);
-        GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_STRENGTH_2MA,
+        GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
+        GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2, GPIO_STRENGTH_2MA,
                      GPIO_PIN_TYPE_STD_WPU);
         GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_FALLING_EDGE);
-        GPIOPinIntEnable(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+        GPIOPinIntEnable(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
         IntEnable(INT_GPIOE);
         
         //select button (for some reason on same port as light which is annoying)
@@ -266,7 +285,25 @@ int main(void)
             tasks[2].myTask(tasks[2].taskDataPtr);//Display
 	}
 }
-//Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, Local Communications, and Schedule
+
+//Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, SerialCommunications, and Schedule
+
+void SerialCommunications(void* data){
+  Communications* d = data;
+  char buffer[50];
+  /* float *tempCorrectedBuff;
+	unsigned int* bloodPressCorrectedBuff;
+	unsigned int* pulseRateCorrectedBuff;*/
+  sprintf(buffer,"1.Temperature:  %d\n2. Systolic pressure: %immHG\n3. Dyastolic pressure: %immHG\n4. Pulse rate: %iBPM\n5. Battery: %i",
+          d->tempCorrectedBuff[0],d->bloodPressCorrectedBuff[0],d->bloodPressCorrectedBuff[8],pulseRateCorrectedBuff[0],d->batteryState);
+  
+  char* buf = &buffer[0];
+  while(UARTBusy(UART0_BASE));
+  while(*buf != '\0'){
+    UARTCharPut(UART0_BASE, *buf++);
+  }
+}
+
 void measure(void* data) {/*
 	//temperature
 	if (((Measurements*)data)->reverseTemp == FALSE) {    //increasing pattern
@@ -478,6 +515,29 @@ void display(void* data) {
         break;
       }
       downPressed = 0;
+    }
+    if (leftPressed == 1){
+      RIT128x96x4Clear();
+      switch(*m) {
+      case 2:
+      case 3:
+      case 4:
+        *m = 0;
+        break;
+      case 5:
+        *m = 1;
+        break;
+      case 6:
+        *m = 2;
+        break;
+      case 7:
+        *m = 3;
+        break;
+      case 8:
+        *m = 4;
+        break;
+      }
+      leftPressed = 0;
     }
   }
   if( *m == MENU_HOVER || *m == ANNUN_HOVER ){  // mode selection
@@ -714,6 +774,7 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
 	z->tempCorrectedBuff = &tempCorrectedBuff[0];
 	z->bloodPressCorrectedBuff = &bloodPressCorrectedBuff[0];
 	z->pulseRateCorrectedBuff = &pulseRateCorrectedBuff[0];
+        z->batteryState  = &batteryState;
 }
 
 void llEnqueue(LinkedList* ll, TCB* task){
