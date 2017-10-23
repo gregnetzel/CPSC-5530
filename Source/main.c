@@ -36,11 +36,8 @@
 #include "driverlib/systick.h"
 #include "driverlib/sysctl.h"
 #include "drivers/rit128x96x4.h"
-<<<<<<< HEAD
 #include  <utils/uartstdio.c>
-=======
 #include "driverlib/pwm.h"
->>>>>>> c87cfdca997f4939cf8fd671ed1a20ac27626666
 
 #define TRUE 1                               //used for display to OLED
 #define FALSE 0
@@ -303,7 +300,6 @@ int main(void)
             tasks[2].myTask(tasks[2].taskDataPtr);//Display
 	}
 }
-<<<<<<< HEAD
 
 //Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, SerialCommunications, and Schedule
 
@@ -323,11 +319,7 @@ void SerialCommunications(void* data){
   }
 }
 
-void measure(void* data) {/*
-=======
-//Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, Local Communications, and Schedule
 void measure(void* data) {
->>>>>>> c87cfdca997f4939cf8fd671ed1a20ac27626666
 	//temperature
 	if (((Measurements*)data)->reverseTemp == FALSE) {    //increasing pattern
 		if (((Measurements*)data)->tempRawBuff[0] > 50) {
