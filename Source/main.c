@@ -407,54 +407,111 @@ void compute(void* data) {
 	*((ComputeData*)data)->heartRateCorrected = h;
   */
 }
-
+/*MENU_HOVER = 0, ANNUN_HOVER = 1,
+HR_HOVER = 2, BP_HOVER = 3, 
+TEMP_HOVER = 4, ANNUNCIATE = 5, 
+HR = 6, BP = 7, TEMP = 8*/
 void display(void* data) {
   unsigned short* m = ((Display*)data)->mode;
-  if (upPressed == 1){
-    RIT128x96x4Clear();
-    *m = *m-1;
+  if (selectPressed == 1){
+    selectPressed = 0;
     upPressed = 0;
-  }
-  if (downPressed == 1){
-    RIT128x96x4Clear();
-    *m = *m+1;
     downPressed = 0;
+    RIT128x96x4Clear();
+    
+    switch(*m) {
+    case 0:
+      *m = 2;
+      break;
+    case 1:
+      *m = 5;
+      break;
+    case 2:
+      *m = 6;
+      break;
+    case 3:
+      *m = 7;
+      break;
+    case 4:
+      *m = 8;
+      break;
+    }
+  }
+  else{
+    if (upPressed == 1){
+      RIT128x96x4Clear();
+      switch(*m) {
+      case 0:
+        break;
+      case 1:
+        *m = 0;
+        break;
+      case 2:
+        break;
+      case 3:
+        *m = 2;
+        break;
+      case 4:
+        *m = 3;
+        break;
+      }
+      upPressed = 0;
+    }
+    if (downPressed == 1){
+      RIT128x96x4Clear();
+      switch(*m) {
+      case 0:
+        *m = 1;
+        break;
+      case 1:
+        break;
+      case 2:
+        *m = 3;
+        break;
+      case 3:
+        *m = 4;
+        break;
+      case 4:
+        break;
+      }
+      downPressed = 0;
+    }
   }
   if( *m == MENU_HOVER || *m == ANNUN_HOVER ){  // mode selection
     print("Please select a Mode:", 0, 0);
   
-    if( m == MENU_HOVER){//  menu mode hover
+    if( *m == MENU_HOVER){//  menu mode hover
       print("* Menu", 0, 1);
     }else{
       print("  Menu", 0, 1);
     }
   
     if( *m == ANNUN_HOVER){//  annunciate hover
-      print("* Annunciate", 0, 1);
+      print("* Annunciate", 0, 2);
     }else{
-      print("  Annunciate", 0, 1);
+      print("  Annunciate", 0, 2);
     }
   }
    
   if( *m == BP_HOVER || *m == TEMP_HOVER || *m == HR_HOVER){  // Menu Mode
     print("Menu", 0, 0);
   
-    if( *m == BP_HOVER){    //  Blood Pressure hover
-      print("* Blood Pressure", 0, 1);
+    if( *m == HR_HOVER ){//  Heart Rate hover
+      print("* Heart Rate", 0, 1);
     }else{
-      print("  Blood Pressure", 0, 1);
+      print("  Heart Rate", 0, 1);
+    }
+  
+    if( *m == BP_HOVER){    //  Blood Pressure hover
+      print("* Blood Pressure", 0, 3);
+    }else{
+      print("  Blood Pressure", 0, 3);
     }
   
     if( *m == TEMP_HOVER ){    //  Temperature hover
-      print("* Temperature", 0, 3);
+      print("* Temperature", 0, 5);
     }else{
-      print("  Temperature", 0, 3);
-    }
-  
-    if( *m == HR_HOVER ){//  Heart Rate hover
-      print("* Heart Rate", 0, 5);
-    }else{
-      print("  Heart Rate", 0, 5);
+      print("  Temperature", 0, 5);
     }
   }
   
@@ -486,17 +543,17 @@ void display(void* data) {
   if( *m == ANNUNCIATE){  // Annunciate Mode
     print("Annunciate:", 0, 0);
     volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
-    intPrint(((Display*)data)->bloodPressCorrectedBuff[0], 3, 0, 0);         //Systolic: should never be over 3 char
-    print("/", 3, 0);
-    intPrint(((Display*)data)->bloodPressCorrectedBuff[7], 5, 4, 0);         //Diastolic: should never be over 5 char
-    print("mm Hg", 9, 0);
+    intPrint(((Display*)data)->bloodPressCorrectedBuff[0], 3, 0, 1);         //Systolic: should never be over 3 char
+    print("/", 3, 1);
+    intPrint(((Display*)data)->bloodPressCorrectedBuff[7], 5, 4, 1);         //Diastolic: should never be over 5 char
+    print("mm Hg", 9, 1);
 
-    fPrint(((Display*)data)->tempCorrectedBuff[0], 4, 0, 1);               //Temperature: should never be over 4 char
-    print("C", 4, 1);
-    intPrint(((Display*)data)->pulseRateCorrectedBuff[0], 3, 6, 1);        //Heartrate: should never be over 3 char
-    print("BPM", 9, 1);
+    fPrint(((Display*)data)->tempCorrectedBuff[0], 4, 0, 2);               //Temperature: should never be over 4 char
+    print("C", 4, 2);
+    intPrint(((Display*)data)->pulseRateCorrectedBuff[0], 3, 6, 2);        //Heartrate: should never be over 3 char
+    print("BPM", 9, 2);
 
-    intPrint(*((Display*)data)->batteryState, 3, 13, 1);    //battery: should never be over 3 char
+    intPrint(*((Display*)data)->batteryState, 3, 13, 2);    //battery: should never be over 3 char
   }
 
 }
