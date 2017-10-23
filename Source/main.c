@@ -78,12 +78,13 @@ int tempHigh = FALSE;
 int pulseLow = FALSE;
 
 //Structs
+typedef struct MyStruct TCB;
 struct MyStruct {
 	void(*myTask)(void*);
 	void* taskDataPtr;
-	struct MyStruct* next;
-	struct MyStruct* prev;
-}; typedef struct MyStruct TCB;
+	TCB* next;
+	TCB* prev;
+}; 
 
 struct LinkedList {  
 	TCB* head;
@@ -157,13 +158,13 @@ void dirPressedHandler(void){//port E pins 0-3 up down left right
   volatile long testUp = GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_0);
   volatile long testDown = GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_1);
   if(testDown == 0){
-    GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_1);
     downPressed = 1;
   }
-  if(testUp == 0){
-    GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_0);
+  else if(testUp == 0){
     upPressed = 1;
   }
+  GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_1);
+  GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_0);
 }
 
 //functions
@@ -189,6 +190,8 @@ TCB* llDequeue(LinkedList* ll);
 
 int main(void)
 {
+        SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
+                   SYSCTL_XTAL_8MHZ);
 	//intitial data
 	Measurements measurementData;
 	ComputeData computeData;
@@ -197,16 +200,14 @@ int main(void)
 	WarningAlarm warningAlarmData;
 	Keypad keypadData;
 	Communications communicationsData;
+        TCB* tasks = malloc(8*sizeof(TCB));
         
-        SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
-                   SYSCTL_XTAL_8MHZ);
-        /*
         //light enable
 	SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;  // Enable the GPIO port that is used for the on-board LED.
 	ulLoop = SYSCTL_RCGC2_R;              // Do a dummy read to insert a few cycles after enabling the peripheral.
 	GPIO_PORTF_DIR_R = 0x01;              // Enable the GPIO pin for the LED (PF0).  Set the direction as output, and
 	GPIO_PORTF_DEN_R = 0x01;              // enable the GPIO pin for digital function.
-        */
+        
         //up down buttons enabled
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
         GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1);
@@ -215,7 +216,8 @@ int main(void)
         GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_FALLING_EDGE);
         GPIOPinIntEnable(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1);
         IntEnable(INT_GPIOE);
-        //select button
+        
+        //select button for some reason on same port as light
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
         GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_1);
         GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,
@@ -228,11 +230,11 @@ int main(void)
 		&warningAlarmData, &keypadData, &communicationsData);
 
 	RIT128x96x4Init(1000000); 
-        /*
-	TCB tasks[6];   //make all tasks
-	tasks[0].myTask = measure;
+        
+                
+        tasks[0].myTask = measure;
 	tasks[1].myTask = compute;
-	tasks[2].myTask = display;
+        tasks[2].myTask = display;
 	tasks[3].myTask = annunciate;
 	tasks[4].myTask = status;
 	tasks[5].myTask = schedule;
@@ -242,13 +244,13 @@ int main(void)
 	tasks[3].taskDataPtr = &warningAlarmData;
 	tasks[4].taskDataPtr = &statusData;
 	tasks[5].taskDataPtr = NULL;
-        */
+        
+        //tasks[2].myTask(tasks[2].taskDataPtr);
 	while (TRUE)
 	{
-		
 	}
 }
-
+//Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, Local Communications, and Schedule
 void measure(void* data) {/*
 	//temperature
 	if (((Measurements*)data)->reverseTemp == FALSE) {    //increasing pattern
@@ -476,8 +478,8 @@ void display(void* data) {
 
 }
 
-void annunciate(void* data) {
-/*
+void annunciate(void* data) {/*
+
 	float t = (float)*(((WarningAlarm*)data)->temp);
 	unsigned int s = *(((WarningAlarm*)data)->sysPress);
 	float d = (float)*(((WarningAlarm*)data)->diaPress);
