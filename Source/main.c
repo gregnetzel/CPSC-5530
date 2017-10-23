@@ -223,6 +223,8 @@ int main(void)
         taskQueue = malloc(sizeof(LinkedList));
         taskQueue->head = NULL;
         taskQueue->tail = NULL;
+        taskQueue->head->next = NULL;
+        taskQueue->head->prev = NULL;
         
         tasks = malloc(NUMTASKS*sizeof(TCB));   //array to hold tasks when not in queue
         tasks[0].myTask = measure;
@@ -244,14 +246,13 @@ int main(void)
         fillBuffers();
 	RIT128x96x4Init(1000000); 
         
-        //light enable
+                                              //light enable
 	SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;  // Enable the GPIO port that is used for the on-board LED.
 	ulLoop = SYSCTL_RCGC2_R;              // Do a dummy read to insert a few cycles after enabling the peripheral.
 	GPIO_PORTF_DIR_R = 0x01;              // Enable the GPIO pin for the LED (PF0).  Set the direction as output, and
 	GPIO_PORTF_DEN_R = 0x01;              // enable the GPIO pin for digital function.
-        
-        //uart enable for serial comm
-        SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+                                                           
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);  //uart enable for serial comm
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
         GPIOPinConfigure(GPIO_PA0_U0RX);
 	GPIOPinConfigure(GPIO_PA1_U0TX);
@@ -261,8 +262,7 @@ int main(void)
 	UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
 	UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200, UART_CONFIG_WLEN_8|UART_CONFIG_PAR_NONE|UART_CONFIG_STOP_ONE);
         
-        //up down buttons enabled
-        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);          //up down buttons enabled
         GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
         GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2, GPIO_STRENGTH_2MA,
                      GPIO_PIN_TYPE_STD_WPU);
@@ -270,8 +270,7 @@ int main(void)
         GPIOPinIntEnable(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
         IntEnable(INT_GPIOE);
         
-        //select button (for some reason on same port as light which is annoying)
-        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);  //select button (for some reason on same port as light which is annoying)
         GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_1);
         GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,
                      GPIO_PIN_TYPE_STD_WPU);
@@ -279,8 +278,7 @@ int main(void)
         GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_1);
         IntEnable(INT_GPIOF);
 
-        // speaker
-        SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);    // speaker
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
         GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0);
@@ -446,6 +444,7 @@ void measure(void* data) {
 			}
 		}
 	}
+        //addFlags[0] = 0;
         addFlags[1] = 1;
 }
 
@@ -465,6 +464,9 @@ void compute(void* data) {
 	((ComputeData*)data)->pulseRateCorrectedBuff[0] = h;
         
         //maybe have a function to increment all pointers.
+        
+        //addFlags[1] = 0;
+        addFlags[2] = 1;
 }
 
 /*MENU_HOVER = 0, ANNUN_HOVER = 1,
@@ -501,7 +503,6 @@ void display(void* data) {
       addFlags[0] = 1;
       break;
     case 5:
-      addFlags[5] = 0;
       bpHigh = FALSE;
       break;
     }
@@ -759,6 +760,7 @@ void intPrint(int c, int size, int hOffset, int vOffset) {             // number
 		RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
 	}
 }
+
 //print of a float with one decimal
 void fPrint(float c, int size, int hOffset, int vOffset) {// number, size of number,column, row 
 	char dec[2];
@@ -824,6 +826,7 @@ void fillBuffers() {
     pulseRateRawBuff[i] = 0;
   }
 }
+
 void llEnqueue(LinkedList* ll, TCB* task){
 	if (NULL == ll->head){
   		ll->head = task;
@@ -833,6 +836,7 @@ void llEnqueue(LinkedList* ll, TCB* task){
 		ll->tail->next = task;
 		task->prev = ll->tail;
 		ll->tail = task;
+                ll->tail = NULL;
 	}
 }
 
