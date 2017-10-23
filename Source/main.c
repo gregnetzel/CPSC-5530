@@ -195,13 +195,14 @@ void intPrint(int c, int size, int hOffset, int vOffset);
 void fPrint(float c, int size, int hOffset, int vOffset);
 void llEnqueue(LinkedList* ll, TCB* task);
 TCB* llDequeue(LinkedList* ll);
+void serialCommunications(void* data);
 //*****************************************************************************
 //
 // Simulated Medical Device
 //
 //*****************************************************************************
 
-LinkedList taskQueue;
+LinkedList* taskQueue;
 TCB* tasks;
 
 int main(void)
@@ -219,6 +220,9 @@ int main(void)
 	WarningAlarm warningAlarmData;
 	Keypad keypadData;
 	Communications communicationsData;
+        taskQueue = malloc(sizeof(LinkedList));
+        taskQueue->head = NULL;
+        taskQueue->tail = NULL;
         
         tasks = malloc(NUMTASKS*sizeof(TCB));   //array to hold tasks when not in queue
         tasks[0].myTask = measure;
@@ -227,12 +231,14 @@ int main(void)
 	tasks[3].myTask = annunciate;
 	tasks[4].myTask = status;
 	tasks[5].myTask = schedule;
+	tasks[6].myTask = serialCommunications;
 	tasks[0].taskDataPtr = &measurementData;
 	tasks[1].taskDataPtr = &computeData;
 	tasks[2].taskDataPtr = &displayData;
 	tasks[3].taskDataPtr = &warningAlarmData;
 	tasks[4].taskDataPtr = &statusData;
 	tasks[5].taskDataPtr = NULL;
+        tasks[6].taskDataPtr = &communicationsData;
         
         TCB* activeTask;
         fillBuffers();
@@ -292,10 +298,10 @@ int main(void)
 	while (TRUE)
 	{
             tasks[5].myTask(tasks[5].taskDataPtr);//Schedule task
-            activeTask = llDequeue(&taskQueue);
+            activeTask = llDequeue(taskQueue);
             while(activeTask != NULL){//queue isn't empty
               activeTask->myTask(activeTask->taskDataPtr);
-              activeTask = llDequeue(&taskQueue);
+              activeTask = llDequeue(taskQueue);
             }
             tasks[2].myTask(tasks[2].taskDataPtr);//Display
 	}
@@ -303,13 +309,13 @@ int main(void)
 
 //Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, SerialCommunications, and Schedule
 
-void SerialCommunications(void* data){
+void serialCommunications(void* data){
   Communications* d = data;
   char buffer[50];
   /* float *tempCorrectedBuff;
 	unsigned int* bloodPressCorrectedBuff;
 	unsigned int* pulseRateCorrectedBuff;*/
-  sprintf(buffer,"1.Temperature:  %d\n2. Systolic pressure: %immHG\n3. Dyastolic pressure: %immHG\n4. Pulse rate: %iBPM\n5. Battery: %i",
+  sprintf(buffer,"1.Temperature:  %d\n2. Systolic pressure: %dmmHG\n3. Dyastolic pressure: %dmmHG\n4. Pulse rate: %dBPM\n5. Battery: %d",
           d->tempCorrectedBuff[0],d->bloodPressCorrectedBuff[0],d->bloodPressCorrectedBuff[8],pulseRateCorrectedBuff[0],d->batteryState);
   
   char* buf = &buffer[0];
@@ -440,7 +446,7 @@ void measure(void* data) {
 			}
 		}
 	}
-
+        addFlags[1] = 1;
 }
 
 void compute(void* data) {
@@ -479,16 +485,24 @@ void display(void* data) {
       *m = 2;
       break;
     case 1:
-      *m = 5;
+      *m = 5;      
+      addFlags[0] = 1;
       break;
     case 2:
       *m = 6;
+      addFlags[0] = 1;
       break;
     case 3:
       *m = 7;
+      addFlags[0] = 1;
       break;
     case 4:
       *m = 8;
+      addFlags[0] = 1;
+      break;
+    case 5:
+      addFlags[5] = 0;
+      bpHigh = FALSE;
       break;
     }
   }
@@ -717,7 +731,7 @@ void schedule(void* data) {
         for (int j = 0; j < NUMTASKS; j++){
           if(addFlags[j] != 0){
             addFlags[j] = 0;
-            llEnqueue(&taskQueue,&tasks[j]);
+            llEnqueue(taskQueue,&tasks[j]);
           }
         }
 }
