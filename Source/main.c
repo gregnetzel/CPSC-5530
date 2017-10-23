@@ -36,6 +36,7 @@
 #include "driverlib/systick.h"
 #include "driverlib/sysctl.h"
 #include "drivers/rit128x96x4.h"
+#include "driverlib/pwm.h"
 
 #define TRUE 1                               //used for display to OLED
 #define FALSE 0
@@ -250,6 +251,19 @@ int main(void)
         GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_1);
         IntEnable(INT_GPIOF);
 
+        // speaker
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+        GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0);
+        GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1);
+        unsigned long ulPeriod = SysCtlClockGet() / 440;
+        PWMGenConfigure(PWM_BASE, PWM_GEN_0,
+                    PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
+        PWMGenPeriodSet(PWM_BASE, PWM_GEN_0, ulPeriod);
+        PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, ulPeriod / 4);
+        PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
+        
 	fillStructs(&measurementData, &computeData, &displayData, &statusData,
 		&warningAlarmData, &keypadData, &communicationsData);
 
@@ -563,6 +577,9 @@ void display(void* data) {
 
 void annunciate(void* data) {/*
 
+  PWMGenEnable(PWM_BASE, PWM_GEN_0);
+  PWMGenDisable(PWM_BASE, PWM_GEN_0);
+  
 	float t = (float)*(((WarningAlarm*)data)->temp);
 	unsigned int s = *(((WarningAlarm*)data)->sysPress);
 	float d = (float)*(((WarningAlarm*)data)->diaPress);
