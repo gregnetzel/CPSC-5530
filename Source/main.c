@@ -41,7 +41,7 @@
 #define FALSE 0
 #define hSpacing 8
 #define vSpacing 14
-
+#define NUMTASKS 8
 volatile int i = 0;
 volatile unsigned long ulLoop;
 volatile unsigned long time = 0; //in tenths of seconds
@@ -192,6 +192,7 @@ TCB* llDequeue(LinkedList* ll);
 //*****************************************************************************
 
 LinkedList taskQueue;
+TCB* tasks;
 
 int main(void)
 {
@@ -209,7 +210,7 @@ int main(void)
 	Keypad keypadData;
 	Communications communicationsData;
         
-        TCB* tasks = malloc(8*sizeof(TCB));   //array to hold tasks when not in queue
+        tasks = malloc(NUMTASKS*sizeof(TCB));   //array to hold tasks when not in queue
         tasks[0].myTask = measure;
 	tasks[1].myTask = compute;
         tasks[2].myTask = display;
@@ -407,10 +408,12 @@ void compute(void* data) {
 	*((ComputeData*)data)->heartRateCorrected = h;
   */
 }
+
 /*MENU_HOVER = 0, ANNUN_HOVER = 1,
 HR_HOVER = 2, BP_HOVER = 3, 
 TEMP_HOVER = 4, ANNUNCIATE = 5, 
 HR = 6, BP = 7, TEMP = 8*/
+
 void display(void* data) {
   unsigned short* m = ((Display*)data)->mode;
   if (selectPressed == 1){
@@ -626,6 +629,12 @@ void schedule(void* data) {
 	delay(1);
 	i++;
         time++;
+        for (int j = 0; j < NUMTASKS; j++){
+          if(addFlags[j] != 0){
+            addFlags[j] = 0;
+            llEnqueue(&taskQueue,&tasks[j]);
+          }
+        }
 }
 
 void delay(unsigned long aValue) {
@@ -641,7 +650,7 @@ void print(char* c, int hOffset, int vOffset) {                        // string
 	RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
 }
 
-void intPrint(int c, int size, int hOffset, int vOffset) {             // string, column, row
+void intPrint(int c, int size, int hOffset, int vOffset) {             // number, size of number,column, row
 	char dec[2];
 	dec[1] = '\0';
 	int rem = c;
@@ -651,7 +660,8 @@ void intPrint(int c, int size, int hOffset, int vOffset) {             // string
 		RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
 	}
 }
-void fPrint(float c, int size, int hOffset, int vOffset) {//found a clear command haven't tested it yet RIT128x96x4Clear()
+//print of a float with one decimal
+void fPrint(float c, int size, int hOffset, int vOffset) {// number, size of number,column, row 
 	char dec[2];
 	dec[1] = '\0';
 	int rem = (int)c * 10;
@@ -675,14 +685,14 @@ void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, Warning
 	m->sysComplete = FALSE;
 	m->reversePulse = FALSE;
 
-	c->tempRawBuff = &tempRawBuff[0];                              //compute
+	c->tempRawBuff = &tempRawBuff[0];                            //compute
 	c->bloodPressRawBuff = &bloodPressRawBuff[0];
 	c->pulseRateRawBuff = &pulseRateRawBuff[0];
 	c->tempCorrectedBuff = &tempCorrectedBuff[0];
 	c->bloodPressCorrectedBuff = &bloodPressCorrectedBuff[0];
 	c->pulseRateCorrectedBuff = &pulseRateCorrectedBuff[0];
 
-	d->tempCorrectedBuff = &tempCorrectedBuff[0];                           //display
+	d->tempCorrectedBuff = &tempCorrectedBuff[0];                //display
 	d->bloodPressCorrectedBuff = &bloodPressCorrectedBuff[0];
 	d->pulseRateCorrectedBuff = &pulseRateCorrectedBuff[0];
 	d->batteryState = &batteryState;
