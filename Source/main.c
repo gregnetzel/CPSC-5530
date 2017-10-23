@@ -676,7 +676,7 @@ void annunciate(void* data) {
         }
         counter++;
       }
-      coutner = 0;
+      counter = 0;
     }
 
     if (t > 37.8 || t < 36.1) {
@@ -834,6 +834,7 @@ void fillBuffers() {
     pulseRateRawBuff[i] = 0;
   }
 }
+
 void llEnqueue(LinkedList* ll, TCB* task){
 	if (NULL == ll->head){
   		ll->head = task;
