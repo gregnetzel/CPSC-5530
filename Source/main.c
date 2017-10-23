@@ -154,7 +154,7 @@ volatile int upPressed = 0;
 volatile int downPressed = 0;
 volatile int leftPressed = 0;
 volatile int selectPressed = 0;
-volatile int addFlags[] = {0,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
+volatile int addFlags[] = {1,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
 
 //interrupts
 void selectPressedHandler(void){//port F pin 1
@@ -241,6 +241,10 @@ int main(void)
 	tasks[4].taskDataPtr = &statusData;
 	tasks[5].taskDataPtr = NULL;
         tasks[6].taskDataPtr = &communicationsData;
+        for(int j = 0; j < NUMTASKS; j++){//set all the tasks to default pointing at null
+          tasks[j].next = NULL;
+          tasks[j].prev = NULL;
+        }
         
         TCB* activeTask;
         fillBuffers();
@@ -300,7 +304,7 @@ int main(void)
             while(activeTask != NULL){//queue isn't empty
               activeTask->myTask(activeTask->taskDataPtr);
               activeTask = llDequeue(taskQueue);
-            }
+            }            
             tasks[2].myTask(tasks[2].taskDataPtr);//Display
 	}
 }
@@ -325,10 +329,12 @@ void serialCommunications(void* data){
 
 void measure(void* data) {
 	//temperature
+  if(i%10 == 0){
+    int ind = i/10;
 	if (((Measurements*)data)->reverseTemp == FALSE) {    //increasing pattern
 		if (((Measurements*)data)->tempRawBuff[0] > 50) {
 			((Measurements*)data)->reverseTemp = TRUE;      //reverse pattern
-			if (i % 2 == 0) {                                   //even tick
+			if (ind % 2 == 0) {                                   //even tick
 				((Measurements*)data)->tempRawBuff[0] -= 2;
 			}
 			else {                                          //odd tick
@@ -336,7 +342,7 @@ void measure(void* data) {
 			}
 		}
 		else {
-			if (i % 2 == 0) {                                   //even tick
+			if (ind % 2 == 0) {                                   //even tick
 				((Measurements*)data)->tempRawBuff[0] += 2;
 			}
 			else {                                          //odd tick
@@ -347,7 +353,7 @@ void measure(void* data) {
 	else {                                              //decreasing pattern
 		if (*((Measurements*)data)->tempRawBuff < 15) {
 			((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
-			if (i % 2 == 0) {                                   //even tick
+			if (ind % 2 == 0) {                                   //even tick
 				((Measurements*)data)->tempRawBuff[0] += 2;
 			}
 			else {                                          //odd tick
@@ -355,7 +361,7 @@ void measure(void* data) {
 			}
 		}
 		else {
-			if (i % 2 == 0) {                                   //even tick
+			if (ind % 2 == 0) {                                   //even tick
 				((Measurements*)data)->tempRawBuff[0] -= 2;
 			}
 			else {                                          //odd tick
@@ -363,10 +369,11 @@ void measure(void* data) {
 			}
 		}
 	}
+  }
 	//systolic/diastolic pressure
 	if (((Measurements*)data)->sysComplete == FALSE) {   //run systolic
 		if (((Measurements*)data)->bloodPressRawBuff[0] > 100) {      //systolic complete
-			((Measurements*)data)->sysComplete = TRUE;      //run diatolic
+			((Measurements*)data)->sysComplete = TRUE;      //run diastolic
 			((Measurements*)data)->bloodPressRawBuff[0] = 80;          //rest systolic
 			if (i % 2 == 0) {                                   //even tick
 				((Measurements*)data)->bloodPressRawBuff[8] += 2;
@@ -384,10 +391,10 @@ void measure(void* data) {
 			}
 		}
 	}
-	else {                                              //run diatolic
-		if (((Measurements*)data)->bloodPressRawBuff[0] < 40) {       //diatolic complete
+	else {                                              //run diastolic
+		if (((Measurements*)data)->bloodPressRawBuff[0] < 40) {       //diastolic complete
 			((Measurements*)data)->sysComplete = FALSE;     //run systolic
-			((Measurements*)data)->bloodPressRawBuff[8] = 80;          //reset diatolic
+			((Measurements*)data)->bloodPressRawBuff[8] = 80;          //reset diastolic
 			if (i % 2 == 0) {                                   //even tick
 				((Measurements*)data)->bloodPressRawBuff[0] += 2;
 			}
@@ -466,7 +473,7 @@ void compute(void* data) {
         //maybe have a function to increment all pointers.
         
         //addFlags[1] = 0;
-        addFlags[2] = 1;
+        //addFlags[2] = 1;
 }
 
 /*MENU_HOVER = 0, ANNUN_HOVER = 1,
@@ -488,19 +495,19 @@ void display(void* data) {
       break;
     case 1:
       *m = 5;      
-      addFlags[0] = 1;
+      //addFlags[0] = 1;
       break;
     case 2:
       *m = 6;
-      addFlags[0] = 1;
+      //addFlags[0] = 1;
       break;
     case 3:
       *m = 7;
-      addFlags[0] = 1;
+      //addFlags[0] = 1;
       break;
     case 4:
       *m = 8;
-      addFlags[0] = 1;
+      //addFlags[0] = 1;
       break;
     case 5:
       bpHigh = FALSE;
@@ -616,7 +623,7 @@ void display(void* data) {
       volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
       intPrint(((Display*)data)->bloodPressCorrectedBuff[0], 3, 0, 2);         //Systolic: should never be over 3 char
       print("/", 3, 2);
-      intPrint(((Display*)data)->bloodPressCorrectedBuff[7], 5, 4, 2);         //Diastolic: should never be over 5 char
+      intPrint(((Display*)data)->bloodPressCorrectedBuff[8], 5, 4, 2);         //Diastolic: should never be over 5 char
       print("mm Hg", 9, 2);
     }
   
@@ -731,7 +738,6 @@ void annunciate(void* data) {
 
 
 void status(void* data) {
-
 	*(((Status*)data)->batteryState) -= 1;              //decrement battery by 1
 }
 
@@ -744,6 +750,10 @@ void schedule(void* data) {
             addFlags[j] = 0;
             llEnqueue(taskQueue,&tasks[j]);
           }
+        }
+        if(time%10 == 0 && (time/10)%2 == 0){
+          addFlags[0] = 1; //flag measure
+          addFlags[4] = 1; //flag status
         }
 }
 
