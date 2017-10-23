@@ -636,65 +636,68 @@ void display(void* data) {
 
 }
 
-void annunciate(void* data) {/*
-
-  PWMGenEnable(PWM_BASE, PWM_GEN_0);
-  PWMGenDisable(PWM_BASE, PWM_GEN_0);
+void annunciate(void* data) {
   
-	float t = (float)*(((WarningAlarm*)data)->temp);
-	unsigned int s = *(((WarningAlarm*)data)->sysPress);
-	float d = (float)*(((WarningAlarm*)data)->diaPress);
-	unsigned int h = *(((WarningAlarm*)data)->heartRate);
-	short b = *(((WarningAlarm*)data)->batteryState);
-	int counter = 0;                                //for "alarm cycle"
+    float t = (float)((WarningAlarm*)data)->tempRawBuff[0];
+    unsigned int s = ((WarningAlarm*)data)->pulseRateRawBuff[0];
+    float d = (float)((WarningAlarm*)data)->pulseRateRawBuff[7];
+    unsigned int h = ((WarningAlarm*)data)->pulseRateRawBuff[0];
+    short b = *(((WarningAlarm*)data)->batteryState);
+    int counter = 0;                                //for "alarm cycle"
 
-	t = 5 + (0.75*t);
-	s = 9 + (2 * s);
-	d = 6 + (1.5*d);
-	h = 8 + (3 * h);
+    t = 5 + (0.75*t);
+    s = 9 + (2 * s);
+    d = 6 + (1.5*d);
+    h = 8 + (3 * h);
 
-	if (b < 40) {
-		while (counter < 3) {                          //flash light at 3 second interval
-			GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
-			delay(30);
-			GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
-			delay(30);
-			counter++;
-		}
-	}
+    if (b < 40) {
+            while (counter < 3) {                          //flash light at 3 second interval
+                    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+                    delay(30);
+                    GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
+                    delay(30);
+                    counter++;
+            }
+    }
 
-	if (t > 37.8 || t < 36.1) {
-		while (counter < 3) {                           //flash light at 1 second interval
-			GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
-			delay(20);
-			GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
-			delay(20);
-			counter++;
-		}
-	}
+    if (t > 37.8 || t < 36.1) {
+            while (counter < 3) {                           //flash light at 1 second interval
+                    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+                    delay(20);
+                    GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
+                    delay(20);
+                    counter++;
+            }
+    }
 
-	if (h > 100 || h < 60) {
-		while (counter < 3) {                           //flash light at 2 second interval
-			GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
-			delay(40);
-			GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
-			delay(40);
-			counter++;
-		}
-	}
+    if (h > 100 || h < 60) {
+            while (counter < 3) {                           //flash light at 2 second interval
+                    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+                    delay(40);
+                    GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
+                    delay(40);
+                    counter++;
+            }
+    }
 
-	if (s > 120 || s < 90 || d > 80 || d < 60) {
-		while (counter < 3) {                           //flash light at 0.5 second interval
-			GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
-			delay(10);
-			GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
-			delay(10);
-			counter++;
-		}
-	}
+    if (s > 120 || s < 90 || d > 80 || d < 60) {
+            while (counter < 3) {                           //flash light at 0.5 second interval
+                    GPIO_PORTF_DATA_R &= ~(0x01);               // Turn off the LED
+                    delay(10);
+                    GPIO_PORTF_DATA_R |= 0x01;                  // Turn on the LED
+                    delay(10);
+                    counter++;
+            }
+    }
 
-	GPIO_PORTF_DATA_R |= 0x01;                     // Turn on the LED for normal state.
-*/
+    if(s > 144){
+      unsigned long t = time % 10; 
+      PWMGenEnable(PWM_BASE, PWM_GEN_0);
+      while(time % 10 != t){}
+      PWMGenDisable(PWM_BASE, PWM_GEN_0);
+    }
+    
+    GPIO_PORTF_DATA_R |= 0x01;                     // Turn on the LED for normal state.
 }
 
 
