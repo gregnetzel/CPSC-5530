@@ -263,7 +263,6 @@ int main(void)
               activeTask = llDequeue(&taskQueue);
             }
             tasks[2].myTask(tasks[2].taskDataPtr);//Display
-            intPrint(upPressed,1,0, 4);
 	}
 }
 //Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, Local Communications, and Schedule
@@ -410,10 +409,18 @@ void compute(void* data) {
 }
 
 void display(void* data) {
-  
-  short m = *((Display*)data)->mode;
-  
-  if( m == MENU_HOVER || m == ANNUN_HOVER ){  // mode selection
+  unsigned short* m = ((Display*)data)->mode;
+  if (upPressed == 1){
+    RIT128x96x4Clear();
+    *m = *m-1;
+    upPressed = 0;
+  }
+  if (downPressed == 1){
+    RIT128x96x4Clear();
+    *m = *m+1;
+    downPressed = 0;
+  }
+  if( *m == MENU_HOVER || *m == ANNUN_HOVER ){  // mode selection
     print("Please select a Mode:", 0, 0);
   
     if( m == MENU_HOVER){//  menu mode hover
@@ -422,39 +429,39 @@ void display(void* data) {
       print("  Menu", 0, 1);
     }
   
-    if( m == ANNUN_HOVER){//  annunciate hover
+    if( *m == ANNUN_HOVER){//  annunciate hover
       print("* Annunciate", 0, 1);
     }else{
       print("  Annunciate", 0, 1);
     }
   }
    
-  if( m == BP_HOVER || m == TEMP_HOVER || m == HR_HOVER){  // Menu Mode
+  if( *m == BP_HOVER || *m == TEMP_HOVER || *m == HR_HOVER){  // Menu Mode
     print("Menu", 0, 0);
   
-    if( m == BP_HOVER){    //  Blood Pressure hover
+    if( *m == BP_HOVER){    //  Blood Pressure hover
       print("* Blood Pressure", 0, 1);
     }else{
       print("  Blood Pressure", 0, 1);
     }
   
-    if( m == TEMP_HOVER ){    //  Temperature hover
+    if( *m == TEMP_HOVER ){    //  Temperature hover
       print("* Temperature", 0, 3);
     }else{
       print("  Temperature", 0, 3);
     }
   
-    if( m == HR_HOVER ){//  Heart Rate hover
+    if( *m == HR_HOVER ){//  Heart Rate hover
       print("* Heart Rate", 0, 5);
     }else{
       print("  Heart Rate", 0, 5);
     }
   }
   
-  if( m == BP || m == HR || m == TEMP){  // Menu option display
+  if( *m == BP || *m == HR || *m == TEMP){  // Menu option display
     print("Menu", 0, 0);
     
-    if( m == BP){  // Blood Pressure
+    if( *m == BP){  // Blood Pressure
       print("Blood Pressure", 0, 1);
       volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
       intPrint(((Display*)data)->bloodPressCorrectedBuff[0], 3, 0, 2);         //Systolic: should never be over 3 char
@@ -463,20 +470,20 @@ void display(void* data) {
       print("mm Hg", 9, 2);
     }
   
-    if( m == TEMP){  // temperature
+    if( *m == TEMP){  // temperature
       print("Temperature:", 0, 1);
       fPrint(((Display*)data)->tempCorrectedBuff[0], 4, 0, 2);               //Temperature: should never be over 4 char
       print("C", 4, 2);
     }
     
-    if( m == HR){  // heart rate
+    if( *m == HR){  // heart rate
       print("Heart Rate:", 0, 1);
       intPrint(((Display*)data)->pulseRateCorrectedBuff[0], 3, 0, 2);        //Heartrate: should never be over 3 char
       print("BPM", 3, 2);
     }
   }
    
-  if( m == ANNUNCIATE){  // Annunciate Mode
+  if( *m == ANNUNCIATE){  // Annunciate Mode
     print("Annunciate:", 0, 0);
     volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
     intPrint(((Display*)data)->bloodPressCorrectedBuff[0], 3, 0, 0);         //Systolic: should never be over 3 char
@@ -562,14 +569,6 @@ void schedule(void* data) {
 	delay(1);
 	i++;
         time++;
-        if(time%10 == 0){//whole seconds
-          if((time%10)%2 == 0){//even seconds
-            //
-          }
-          if((time%10)%3 == 0){//every 3 seconds
-            //
-          }
-        }
 }
 
 void delay(unsigned long aValue) {
