@@ -38,6 +38,7 @@
 #include "drivers/rit128x96x4.h"
 #include  <utils/uartstdio.c>
 #include "driverlib/pwm.h"
+#include "driverlib/timer.h"
 
 #define TRUE 1                               //used for display to OLED
 #define FALSE 0
@@ -47,6 +48,7 @@
 volatile int i = 0;
 volatile unsigned long ulLoop;
 volatile unsigned long time = 0; //in tenths of seconds
+unsigned long g_ulFlags;  //flag for timer interrupt
 
 //Enum
 enum displayMode { MENU_HOVER = 0, ANNUN_HOVER = 1, 
@@ -178,7 +180,15 @@ void dirPressedHandler(void){//port E pins 0-3 up down left right
   GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_0);
   GPIOPinIntClear(GPIO_PORTE_BASE, GPIO_PIN_2);
 }
-
+void timerHandler(void){//timer0 subtimerA
+    // Clear the timer interrupt.
+    TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    // Toggle the flag for the first timer.
+    i++;
+    // Update the interrupt status on the display.
+    IntMasterDisable();
+    IntMasterEnable();
+}
 //functions
 void delay(unsigned long aValue);
 void print(char* c, int hOffset, int vOffset);
@@ -294,7 +304,15 @@ int main(void)
         PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, ulPeriod / 4);
         PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
         
-	fillStructs(&measurementData, &computeData, &displayData, &statusData,
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // timer
+        IntMasterEnable();
+        TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);
+	TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet() * 8); // need to play with how often timer ISR is run
+        IntEnable(INT_TIMER0A);
+        TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+        TimerEnable(TIMER0_BASE, TIMER_A);
+        
+        fillStructs(&measurementData, &computeData, &displayData, &statusData,
 		&warningAlarmData, &keypadData, &communicationsData);
         
 	while (TRUE)
@@ -742,8 +760,6 @@ void status(void* data) {
 }
 
 void schedule(void* data) {
-	delay(1);
-	i++;
         time++;
         for (int j = 0; j < NUMTASKS; j++){
           if(addFlags[j] != 0){
@@ -758,12 +774,13 @@ void schedule(void* data) {
 }
 
 void delay(unsigned long aValue) {
-    while(aValue--){
+    /*while(aValue--){
         while(SysTickValueGet() > 1000){
         }
         while(SysTickValueGet() < 1000){
         }
-    }
+    }*/
+   
 }
 
 void print(char* c, int hOffset, int vOffset) {                        // string, column, row
