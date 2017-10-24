@@ -50,6 +50,7 @@ extern void __iar_program_start(void);
 extern void selectPressedHandler();
 extern void dirPressedHandler();
 extern void timerHandler(void);
+extern void pulseTimerHandler(void);
 //*****************************************************************************
 //
 // Reserve space for the system stack.
@@ -117,7 +118,7 @@ __root const uVectorEntry __vector_table[] @ ".intvec" =
     IntDefaultHandler,                      // Watchdog timer
     timerHandler,                           // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
-    IntDefaultHandler,                      // Timer 1 subtimer A
+    pulseTimerHandler,                      // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
     IntDefaultHandler,                      // Timer 2 subtimer A
     IntDefaultHandler,                      // Timer 2 subtimer B

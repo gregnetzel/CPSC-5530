@@ -50,6 +50,7 @@ volatile int j = 0;               // circular buffer usage
 volatile int indexToDel = 0;
 volatile unsigned long ulLoop;
 volatile unsigned long time = 0; //in tenths of seconds
+volatile unsigned long pulseTime = 0; //pulse transducer time
 
 //Enum
 enum displayMode { MENU_HOVER = 0, ANNUN_HOVER = 1, 
@@ -189,6 +190,13 @@ void timerHandler(void){//timer0 subtimerA
     IntMasterDisable();                             // Disable and re-enable interrupt.
     IntMasterEnable();
 }
+
+void pulseTimerHandler(void) {// timer1 subtimerA
+    TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+    pulseTime++;                                    // increment pulse time
+    IntMasterDisable();                             // Disable and re-enable interrupt.
+    IntMasterEnable();
+}
 //functions
 void delay(unsigned long aValue);
 void print(char* c, int hOffset, int vOffset);
@@ -305,13 +313,19 @@ int main(void)
         PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, ulPeriod / 4);
         PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
         
-        SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // timer
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // global timer
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // pulse timer
         IntMasterEnable();
         TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);
+        TimerConfigure(TIMER1_BASE, TIMER_CFG_32_BIT_PER);
 	TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet()/10); // need to play with how often timer ISR is run I think right now its 100ms.
+        TimerLoadSet(TIMER1_BASE, TIMER_A, SysCtlClockGet()*2);  // pulse transducer increments once every 2 seconds.
         IntEnable(INT_TIMER0A);
+        IntEnable(INT_TIMER1A);
         TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+        TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
         TimerEnable(TIMER0_BASE, TIMER_A);
+        TimerEnable(TIMER1_BASE, TIMER_A);
         
         fillStructs(&measurementData, &computeData, &displayData, &statusData,
 		&warningAlarmData, &keypadData, &communicationsData);
@@ -412,7 +426,7 @@ void measure(void* data) {
 	else {                                              //run diastolic
 		if (((Measurements*)data)->bloodPressRawBuff[j] < 40) {       //diastolic complete
 			((Measurements*)data)->sysComplete = FALSE;     //run systolic
-			((Measurements*)data)->bloodPressRawBuff[j+8] = 80;          //reset diastolic
+			((Measurements*)data)->bloodPressRawBuff[j] = 80;          //reset diastolic
 			if (ind % 2 == 0) {                                   //even tick
 				((Measurements*)data)->bloodPressRawBuff[j] += 2;
 			}
@@ -434,7 +448,7 @@ void measure(void* data) {
 	if (((Measurements*)data)->reversePulse == FALSE) {   //increasing pattern
 		if (((Measurements*)data)->pulseRateRawBuff[j] > 40) {
 			((Measurements*)data)->reversePulse = TRUE;     //reverse pattern
-			if (ind % 2 == 0) {                                   //even tick
+			if (pulseTime % 2 == 0) {                                   //even tick
 				((Measurements*)data)->pulseRateRawBuff[j] += 1;
 			}
 			else {                                          //odd tick
@@ -442,7 +456,7 @@ void measure(void* data) {
 			}
 		}
 		else {
-			if (ind % 2 == 0) {                                   //even tick
+			if (pulseTime % 2 == 0) {                                   //even tick
 				((Measurements*)data)->pulseRateRawBuff[j] -= 1;
 			}
 			else {                                          //odd tick
@@ -453,7 +467,7 @@ void measure(void* data) {
 	else {                                              //decreasing pattern
 		if (((Measurements*)data)->pulseRateRawBuff[j] < 15) {
 			((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
-			if (ind % 2 == 0) {                                   //even tick
+			if (pulseTime % 2 == 0) {                                   //even tick
 				((Measurements*)data)->pulseRateRawBuff[j] -= 1;
 			}
 			else {                                          //odd tick
@@ -461,7 +475,7 @@ void measure(void* data) {
 			}
 		}
 		else {
-			if (ind % 2 == 0) {                                   //even tick
+			if (pulseTime % 2 == 0) {                                   //even tick
 				((Measurements*)data)->pulseRateRawBuff[j] += 1;
 			}
 			else {                                          //odd tick
@@ -487,14 +501,14 @@ void compute(void* data) {
 	((ComputeData*)data)->bloodPressCorrectedBuff[j+8] = d;
 	((ComputeData*)data)->pulseRateCorrectedBuff[j] = h;
         
-        indexToDel = j;
+        /*indexToDel = j;
         measureDelete = 1;
         if(j == 7){
           j = 0;
         }
         else {
           j++;
-        }
+        }*/
         
         //addFlags[1] = 0;
         //addFlags[2] = 1;
@@ -684,10 +698,10 @@ void display(void* data) {
 
 void annunciate(void* data) {
   
-    float t = (float)((WarningAlarm*)data)->tempRawBuff[0];
-    unsigned int s = ((WarningAlarm*)data)->bloodPressRawBuff[0];
-    float d = (float)((WarningAlarm*)data)->bloodPressRawBuff[8];
-    unsigned int h = ((WarningAlarm*)data)->pulseRateRawBuff[0];
+    float t = (float)((WarningAlarm*)data)->tempRawBuff[j];
+    unsigned int s = ((WarningAlarm*)data)->bloodPressRawBuff[j];
+    float d = (float)((WarningAlarm*)data)->bloodPressRawBuff[j+8];
+    unsigned int h = ((WarningAlarm*)data)->pulseRateRawBuff[j];
     short b = *(((WarningAlarm*)data)->batteryState);
 
     t = 5 + (0.75*t);
@@ -764,10 +778,10 @@ void status(void* data) {
 }
 
 void schedule(void* data) {
-        if(measureDelete != 0){
+        /*if(measureDelete != 0){
           resetMeasureBufferAt(indexToDel);
           measureDelete = 0;
-        }
+        }*/
         for (int j = 0; j < NUMTASKS; j++){
           if(addFlags[j] != 0){
             addFlags[j] = 0;
