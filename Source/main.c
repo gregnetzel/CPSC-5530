@@ -158,7 +158,7 @@ volatile int upPressed = 0;
 volatile int downPressed = 0;
 volatile int leftPressed = 0;
 volatile int selectPressed = 0;
-volatile int addFlags[] = {1,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
+volatile int addFlags[] = {0,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
 volatile int measureDelete = 0;
 
 //interrupts
@@ -215,6 +215,7 @@ void fPrint(float c, int size, int hOffset, int vOffset);
 void llEnqueue(LinkedList* ll, TCB* task);
 TCB* llDequeue(LinkedList* ll);
 void serialCommunications(void* data);
+void startup();
 //*****************************************************************************
 //
 // Simulated Medical Device
@@ -223,6 +224,7 @@ void serialCommunications(void* data);
 
 LinkedList* taskQueue;
 TCB* tasks;
+char* comBuffer;
 
 int main(void)
 {
@@ -240,6 +242,8 @@ int main(void)
 	Keypad keypadData;
 	Communications communicationsData;
         taskQueue = malloc(sizeof(LinkedList));
+        
+        comBuffer = calloc(150, sizeof(char));
         taskQueue->head = NULL;
         taskQueue->tail = NULL;
         taskQueue->head->next = NULL;
@@ -267,9 +271,27 @@ int main(void)
         
         TCB* activeTask;
         fillBuffers();
-	RIT128x96x4Init(1000000); 
+        startup(); //all port things moved into function
         
-                                              //light enable
+        fillStructs(&measurementData, &computeData, &displayData, &statusData,
+		&warningAlarmData, &keypadData, &communicationsData);
+        
+	while (TRUE)
+	{
+            tasks[5].myTask(tasks[5].taskDataPtr);//Schedule task
+            activeTask = llDequeue(taskQueue);
+            while(activeTask != NULL){//queue isn't empty
+              activeTask->myTask(activeTask->taskDataPtr);
+              activeTask = llDequeue(taskQueue);
+            }            
+            tasks[2].myTask(tasks[2].taskDataPtr);//Display
+	}
+}
+
+//Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, SerialCommunications, and Schedule
+
+void startup(){
+        RIT128x96x4Init(1000000);             //light enable
 	SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;  // Enable the GPIO port that is used for the on-board LED.
 	ulLoop = SYSCTL_RCGC2_R;              // Do a dummy read to insert a few cycles after enabling the peripheral.
 	GPIO_PORTF_DIR_R = 0x01;              // Enable the GPIO pin for the LED (PF0).  Set the direction as output, and
@@ -326,38 +348,19 @@ int main(void)
         TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
         TimerEnable(TIMER0_BASE, TIMER_A);
         TimerEnable(TIMER1_BASE, TIMER_A);
-        
-        fillStructs(&measurementData, &computeData, &displayData, &statusData,
-		&warningAlarmData, &keypadData, &communicationsData);
-        
-	while (TRUE)
-	{
-            tasks[5].myTask(tasks[5].taskDataPtr);//Schedule task
-            activeTask = llDequeue(taskQueue);
-            while(activeTask != NULL){//queue isn't empty
-              activeTask->myTask(activeTask->taskDataPtr);
-              activeTask = llDequeue(taskQueue);
-            }            
-            tasks[2].myTask(tasks[2].taskDataPtr);//Display
-	}
 }
-
-//Startup, Measure, Compute, Display, Annunciate, Warning and Alarm, Status, SerialCommunications, and Schedule
 
 void serialCommunications(void* data){
   Communications* d = data;
-  char buffer[50];
-  /* float *tempCorrectedBuff;
-	unsigned int* bloodPressCorrectedBuff;
-	unsigned int* pulseRateCorrectedBuff;*/
-  sprintf(buffer,"1.Temperature:  %d\n2. Systolic pressure: %dmmHG\n3. Dyastolic pressure: %dmmHG\n4. Pulse rate: %dBPM\n5. Battery: %d",
+  sprintf(comBuffer,"1.Temperature:  %d\n2. Systolic pressure: %dmmHG\n3. Dyastolic pressure: %dmmHG\n4. Pulse rate: %dBPM\n5. Battery: %d",
           d->tempCorrectedBuff[0],d->bloodPressCorrectedBuff[0],d->bloodPressCorrectedBuff[8],pulseRateCorrectedBuff[0],d->batteryState);
   
-  char* buf = &buffer[0];
+  char* buf = &comBuffer[0];
   while(UARTBusy(UART0_BASE));
   while(*buf != '\0'){
     UARTCharPut(UART0_BASE, *buf++);
   }
+  
 }
 
 void measure(void* data) {
@@ -723,7 +726,7 @@ void annunciate(void* data) {
       if (h > 100 || h < 60) {
         if(time % 20 == 0){ // two second have passed
          if( GPIO_PORTF_DATA_R == ~(0x01)){ // LED is off
-          GPIO_PORTF_DATA_R |= 0x01; // Turn on the LED
+            GPIO_PORTF_DATA_R |= 0x01; // Turn on the LED
           }else{
             GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
           }
@@ -766,7 +769,7 @@ void annunciate(void* data) {
       }else{
         PWMGenDisable(PWM_BASE, PWM_GEN_0); // Turn off the speaker
       }
-    
+    addFlags[6] = 1;            //add serial communication flag
     }else{ // no warnings
       GPIO_PORTF_DATA_R |= 0x01; // Turn on the LED
     }
@@ -774,6 +777,7 @@ void annunciate(void* data) {
 
 
 void status(void* data) {
+  if(time%100 == 0)
 	*(((Status*)data)->batteryState) -= 1;              //decrement battery by 1
 }
 
@@ -790,19 +794,20 @@ void schedule(void* data) {
         }
         if(time%10 == 0 && (time/10)%2 == 0){
           addFlags[0] = 1; //flag measure
+          addFlags[3] = 1; //flag annunciate
           addFlags[4] = 1; //flag status
         }
 }
 
-void delay(unsigned long aValue) {
-    /*while(aValue--){
-        while(SysTickValueGet() > 1000){
-        }
-        while(SysTickValueGet() < 1000){
-        }
-    }*/
-   
-}
+//void delay(unsigned long aValue) {
+//    /*while(aValue--){
+//        while(SysTickValueGet() > 1000){
+//        }
+//        while(SysTickValueGet() < 1000){
+//        }
+//    }*/
+//   
+//}
 
 void print(char* c, int hOffset, int vOffset) {                        // string, column, row
 	RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
@@ -901,7 +906,7 @@ void llEnqueue(LinkedList* ll, TCB* task){
 		ll->tail->next = task;
 		task->prev = ll->tail;
 		ll->tail = task;
-                ll->tail = NULL;
+                //ll->tail = NULL;
 	}
 }
 
