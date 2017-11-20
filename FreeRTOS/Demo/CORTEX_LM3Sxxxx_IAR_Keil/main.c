@@ -114,7 +114,7 @@ default the WEB server is excluded to keep the compiled code size under the 32K
 limit imposed by the KickStart version of the IAR compiler.  The graphics
 libraries take up a lot of ROM space, hence including the graphics libraries
 and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
-#define mainINCLUDE_WEB_SERVER	0
+#define mainINCLUDE_WEB_SERVER	1
 
 
 /* Standard includes. */
@@ -160,7 +160,8 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "hw_ints.h"
+#include "interrupt.h"
 /*-----------------------------------------------------------*/
 
 /* The time between cycles of the 'check' functionality (defined within the
@@ -168,10 +169,10 @@ tick hook. */
 #define mainCHECK_DELAY		( ( TickType_t ) 5000 / portTICK_PERIOD_MS )
 
 /* Size of the stack allocated to the uIP task. */
-#define mainBASIC_WEB_STACK_SIZE            ( configMINIMAL_STACK_SIZE * 3 )
+#define mainBASIC_WEB_STACK_SIZE        ( configMINIMAL_STACK_SIZE * 3 )
 
 /* The OLED task uses the sprintf function so requires a little more stack too. */
-#define mainOLED_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE + 50 )
+#define mainOLED_TASK_STACK_SIZE	( configMINIMAL_STACK_SIZE + 50 )
 
 /* Task priorities. */
 #define mainQUEUE_POLL_PRIORITY		( tskIDLE_PRIORITY + 2 )
@@ -246,19 +247,16 @@ const char * const pcWelcomeMessage = "   www.FreeRTOS.org";
 /*-----------------------------------------------------------*/
 
 /* Our Headers and stuff. */
-#define NUMTASKS 8
 volatile int i = 0;
 volatile int j = 0;               // circular buffer usage
 volatile int indexToDel = 0;
-volatile unsigned long ulLoop;
-volatile unsigned long time = 0; //in tenths of seconds
-volatile unsigned long pulseTime = 0; //pulse transducer time
 
 enum displayMode { MENU_HOVER = 0, ANNUN_HOVER = 1, 
                    HR_HOVER = 2, BP_HOVER = 3, 
                   TEMP_HOVER = 4, ANNUNCIATE = 5, 
                   HR = 6, BP = 7, TEMP = 8};
 typedef enum displayMode displayMode;
+char* displayBuffer; 
 
 //Data Variables
 unsigned int tempRawBuff[8];
@@ -286,60 +284,6 @@ unsigned char tempOOR = '0';
 int bpHigh = FALSE;
 int speakerOn = FALSE;
 int pulseLow = FALSE;
-
-struct Measurements {
-	unsigned int* tempRawBuff;
-	unsigned int* bloodPressRawBuff;
-	unsigned int* pulseRateRawBuff;
-	unsigned short* measurementSelection;
-	int reverseTemp;
-	int sysComplete;
-	int reversePulse;
-}; typedef struct Measurements Measurements;
-
-struct ComputeData {
-	unsigned int* tempRawBuff;
-	unsigned int* bloodPressRawBuff;
-	unsigned int* pulseRateRawBuff;
-	float* tempCorrectedBuff;
-	unsigned int* bloodPressCorrectedBuff;
-	unsigned int* pulseRateCorrectedBuff;
-	unsigned short* measurementSelection;
-}; typedef struct ComputeData ComputeData;
-
-struct Display {
-	float* tempCorrectedBuff;
-	unsigned int* bloodPressCorrectedBuff;
-	unsigned int* pulseRateCorrectedBuff;
-	unsigned short* batteryState;
-	unsigned short* mode;
-}; typedef struct Display Display;
-
-struct Status {
-	unsigned short* batteryState;
-}; typedef struct Status Status;
-
-struct WarningAlarm {
-	unsigned int* tempRawBuff;
-	unsigned int* bloodPressRawBuff;
-	unsigned int* pulseRateRawBuff;
-	unsigned short* batteryState;
-}; typedef struct WarningAlarm WarningAlarm;
-
-struct Keypad {
-	unsigned short* mode;
-	unsigned short* measurementSelection;
-	unsigned short* scroll;
-	unsigned short* select;
-	unsigned short* alarmAcknowledge;
-}; typedef struct Keypad Keypad;
-
-struct Communications {
-	float *tempCorrectedBuff;
-	unsigned int* bloodPressCorrectedBuff;
-	unsigned int* pulseRateCorrectedBuff;
-        unsigned short* batteryState;
-}; typedef struct Communications Communications;
 
 //flags
 volatile int upPressed = 0;
@@ -373,19 +317,7 @@ void dirPressedHandler(void){//port E pins 0-3 up down left right
 }
 
 //functions
-void print(char* c, int hOffset, int vOffset);
-void measure(void* data);
-void compute(void* data);
-void display(void* data);
-void annunciate(void* data);
-void status(void* data);
-void schedule(void* data);
-void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s,
-	WarningAlarm* w, Keypad* k, Communications* z);
-void fillBuffers();
-void resetMeasureBufferAt(int j);
-void serialCommunications(void* data);
-void startup();
+void vDisplayMaker(void *pvParameters);
 
 /*************************************************************************
  * Please ensure to read http://www.freertos.org/portlm3sx965.html
@@ -400,7 +332,7 @@ int main( void ){
 	are received via this queue. */
   xOLEDQueue = xQueueCreate( mainOLED_QUEUE_SIZE, sizeof( xOLEDMessage ) );
   
-  /* Start the standard demo tasks. */
+  /* Start the standard demo tasks. 
   vStartIntegerMathTasks( mainINTEGER_TASK_PRIORITY );
   vStartGenericQueueTasks( mainGEN_QUEUE_TASK_PRIORITY );
   vStartInterruptQueueTasks();
@@ -412,7 +344,7 @@ int main( void ){
   vStartQueuePeekTasks();
   vStartQueueSetTasks();
   vStartEventGroupTasks();
-  
+  */
   /* Exclude some tasks if using the kickstart version to ensure we stay within
 	the 32K code size limit. */
 #if mainINCLUDE_WEB_SERVER != 0 
@@ -426,7 +358,7 @@ int main( void ){
 #endif
   
   
-  
+  xTaskCreate( vDisplayMaker, "DISP", 2000, NULL, tskIDLE_PRIORITY, NULL);
   /* Start the tasks defined within this file/specific to this demo. */
   xTaskCreate( vOLEDTask, "OLED", mainOLED_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
   
@@ -448,596 +380,199 @@ int main( void ){
   return 0;
 }
 /*-----------------------------------------------------------*/
-
-/* Our Functions */
-//void startup(){
-//  RIT128x96x4Init(1000000);             //light enable
-//  SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;  // Enable the GPIO port that is used for the on-board LED.
-//  ulLoop = SYSCTL_RCGC2_R;              // Do a dummy read to insert a few cycles after enabling the peripheral.
-//  GPIO_PORTF_DIR_R = 0x01;              // Enable the GPIO pin for the LED (PF0).  Set the direction as output, and
-//  GPIO_PORTF_DEN_R = 0x01;              // enable the GPIO pin for digital function.
-//  
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);  //uart enable for serial comm
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-//  GPIOPinConfigure(GPIO_PA0_U0RX);
-//  GPIOPinConfigure(GPIO_PA1_U0TX);
-//  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);
-//  IntEnable(INT_UART0);
-//  UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
-//  UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200, UART_CONFIG_WLEN_8|UART_CONFIG_PAR_NONE|UART_CONFIG_STOP_ONE);
-//  
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);          //up down buttons enabled
-//  GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
-//  GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2, GPIO_STRENGTH_2MA,
-//                   GPIO_PIN_TYPE_STD_WPU);
-//  GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_FALLING_EDGE);
-//  GPIOPinIntEnable(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
-//  IntEnable(INT_GPIOE);
-//  
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);  //select button (for some reason on same port as light which is annoying)
-//  GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_1);
-//  GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,
-//                   GPIO_PIN_TYPE_STD_WPU);
-//  GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_FALLING_EDGE);
-//  GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_1);
-//  IntEnable(INT_GPIOF);
-//  
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);    // speaker
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
-//  GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0);
-//  GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1);
-//  unsigned long ulPeriod = SysCtlClockGet() / 440;
-//  PWMGenConfigure(PWM_BASE, PWM_GEN_0,
-//                  PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
-//  PWMGenPeriodSet(PWM_BASE, PWM_GEN_0, ulPeriod);
-//  PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, ulPeriod / 4);
-//  PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
-//  
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // global timer
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // pulse timer
-//  IntMasterEnable();
-//  TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);
-//  TimerConfigure(TIMER1_BASE, TIMER_CFG_32_BIT_PER);
-//  TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet()/10); // need to play with how often timer ISR is run I think right now its 100ms.
-//  TimerLoadSet(TIMER1_BASE, TIMER_A, SysCtlClockGet()*2);  // pulse transducer increments once every 2 seconds.
-//  IntEnable(INT_TIMER0A);
-//  IntEnable(INT_TIMER1A);
-//  TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-//  TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
-//  TimerEnable(TIMER0_BASE, TIMER_A);
-//  TimerEnable(TIMER1_BASE, TIMER_A);
-//}
-//
-//void serialCommunications(void* data){
-//  /*Communications* d = data;
-//  sprintf(comBuffer,"1.Temperature:  %d\n2. Systolic pressure: %dmmHG\n3. Dyastolic pressure: %dmmHG\n4. Pulse rate: %dBPM\n5. Battery: %d",
-//          d->tempCorrectedBuff[0],d->bloodPressCorrectedBuff[0],d->bloodPressCorrectedBuff[8],pulseRateCorrectedBuff[0],d->batteryState);
-//  
-//  char* buf = &comBuffer[0];
-//  while(UARTBusy(UART0_BASE));
-//  while(*buf != '\0'){
-//    UARTCharPut(UART0_BASE, *buf++);
-//  }
-//  */
-//}
-//
-//void measure(void* data) {
-//  int ind = i/10;
-//  if(i%10 == 0){                                          //temperature
-//    if (((Measurements*)data)->reverseTemp == FALSE) {    //increasing pattern
-//      if (((Measurements*)data)->tempRawBuff[j] > 50) {
-//        ((Measurements*)data)->reverseTemp = TRUE;      //reverse pattern
-//        if (ind % 2 == 0) {                                   //even tick
-//          ((Measurements*)data)->tempRawBuff[j] -= 2;
-//        }
-//        else {                                          //odd tick
-//          ((Measurements*)data)->tempRawBuff[j] += 1;
-//        }
-//      }
-//      else {
-//        if (ind % 2 == 0) {                                   //even tick
-//          ((Measurements*)data)->tempRawBuff[j] += 2;
-//        }
-//        else {                                          //odd tick
-//          ((Measurements*)data)->tempRawBuff[j] -= 1;
-//        }
-//      }
-//    }
-//    else {                                              //decreasing pattern
-//      if (((Measurements*)data)->tempRawBuff[j] < 15) {
-//        ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
-//        if (ind % 2 == 0) {                                   //even tick
-//          ((Measurements*)data)->tempRawBuff[j] += 2;
-//        }
-//        else {                                          //odd tick
-//          ((Measurements*)data)->tempRawBuff[j] -= 1;
-//        }
-//      }
-//      else {
-//        if (ind % 2 == 0) {                                   //even tick
-//          ((Measurements*)data)->tempRawBuff[j] -= 2;
-//        }
-//        else {                                          //odd tick
-//          ((Measurements*)data)->tempRawBuff[j] += 1;
-//        }
-//      }
-//    }
-//  }
-//  //systolic/diastolic pressure
-//  if (((Measurements*)data)->sysComplete == FALSE) {   //run systolic
-//    if (((Measurements*)data)->bloodPressRawBuff[j] > 100) {      //systolic complete
-//      ((Measurements*)data)->sysComplete = TRUE;      //run diastolic
-//      ((Measurements*)data)->bloodPressRawBuff[j] = 80;          //rest systolic
-//      if (ind % 2 == 0) {                                   //even tick
-//        ((Measurements*)data)->bloodPressRawBuff[j+8] += 2;
-//      }
-//      else {                                          //odd tick
-//        ((Measurements*)data)->bloodPressRawBuff[j+8] -= 1;
-//      }
-//    }
-//    else {
-//      if (ind % 2 == 0) {                                   //even tick
-//        ((Measurements*)data)->bloodPressRawBuff[j] += 2;
-//      }
-//      else {                                          //odd tick
-//        ((Measurements*)data)->bloodPressRawBuff[j] -= 1;
-//      }
-//    }
-//  }
-//  else {                                              //run diastolic
-//    if (((Measurements*)data)->bloodPressRawBuff[j] < 40) {       //diastolic complete
-//      ((Measurements*)data)->sysComplete = FALSE;     //run systolic
-//      ((Measurements*)data)->bloodPressRawBuff[j] = 80;          //reset diastolic
-//      if (ind % 2 == 0) {                                   //even tick
-//        ((Measurements*)data)->bloodPressRawBuff[j] += 2;
-//      }
-//      else {                                          //odd tick
-//        ((Measurements*)data)->bloodPressRawBuff[j] -= 1;
-//      }
-//    }
-//    else {
-//      if (ind % 2 == 0) {                                   //even tick
-//        ((Measurements*)data)->bloodPressRawBuff[j+8] += 2;
-//      }
-//      else {                                          //odd tick
-//        ((Measurements*)data)->bloodPressRawBuff[j+8] -= 1;
-//      }
-//    }
-//  }
-//  
-//  //heartrate
-//  if (((Measurements*)data)->reversePulse == FALSE) {   //increasing pattern
-//    if (((Measurements*)data)->pulseRateRawBuff[j] > 40) {
-//      ((Measurements*)data)->reversePulse = TRUE;     //reverse pattern
-//      if (pulseTime % 2 == 0) {                                   //even tick
-//        ((Measurements*)data)->pulseRateRawBuff[j] += 1;
-//      }
-//      else {                                          //odd tick
-//        ((Measurements*)data)->pulseRateRawBuff[j] -= 3;
-//      }
-//    }
-//    else {
-//      if (pulseTime % 2 == 0) {                                   //even tick
-//        ((Measurements*)data)->pulseRateRawBuff[j] -= 1;
-//      }
-//      else {                                          //odd tick
-//        ((Measurements*)data)->pulseRateRawBuff[j] += 3;
-//      }
-//    }
-//  }
-//  else {                                              //decreasing pattern
-//    if (((Measurements*)data)->pulseRateRawBuff[j] < 15) {
-//      ((Measurements*)data)->reverseTemp = FALSE;     //reverse pattern
-//      if (pulseTime % 2 == 0) {                                   //even tick
-//        ((Measurements*)data)->pulseRateRawBuff[j] -= 1;
-//      }
-//      else {                                          //odd tick
-//        ((Measurements*)data)->pulseRateRawBuff[j] += 3;
-//      }
-//    }
-//    else {   
-//      if (pulseTime % 2 == 0) {                                   //even tick
-//        ((Measurements*)data)->pulseRateRawBuff[j] += 1;
-//      }
-//      else {                                          //odd tick
-//        ((Measurements*)data)->pulseRateRawBuff[j] -= 3;
-//      }
-//    }
-//  }
-//  addFlags[1] = 1;
-//}
-//
-//void compute(void* data) {
-//  float t = (float)(((ComputeData*)data)->tempRawBuff[j]);
-//  unsigned int s = (((ComputeData*)data)->bloodPressRawBuff[j]);
-//  unsigned int d = (((ComputeData*)data)->bloodPressRawBuff[j+8]); 
-//  unsigned int h = (((ComputeData*)data)->pulseRateRawBuff[j]);
-//  
-//  t = (5 + (0.75*t));
-//  s = 9 + (2 * s);
-//  d = (int)(6 + (1.5*d));
-//  h = 8 + (3 * h);
-//  ((ComputeData*)data)->tempCorrectedBuff[j] = t;
-//  ((ComputeData*)data)->bloodPressCorrectedBuff[j] = s;
-//  ((ComputeData*)data)->bloodPressCorrectedBuff[j+8] = d;
-//  ((ComputeData*)data)->pulseRateCorrectedBuff[j] = h;
-//}
-//
-///*MENU_HOVER = 0, ANNUN_HOVER = 1,
-//HR_HOVER = 2, BP_HOVER = 3, 
-//TEMP_HOVER = 4, ANNUNCIATE = 5, 
-//HR = 6, BP = 7, TEMP = 8*/
-//
-//void display(void* data) {
-//  /*unsigned short* m = ((Display*)data)->mode;
-//  if (selectPressed == 1){
-//    selectPressed = 0;
-//    upPressed = 0;
-//    downPressed = 0;
-//    RIT128x96x4Clear();
-//    
-//    switch(*m) {
-//    case 0:
-//      *m = 2;
-//      break;
-//    case 1:
-//      *m = 5;      
-//      //addFlags[0] = 1;
-//      break;
-//    case 2:
-//      *m = 6;
-//      //addFlags[0] = 1;
-//      break;
-//    case 3:
-//      *m = 7;
-//      //addFlags[0] = 1;
-//      break;
-//    case 4:
-//      *m = 8;
-//      //addFlags[0] = 1;
-//      break;
-//    case 5:
-//      bpHigh = FALSE;
-//      break;
-//    }
-//  }
-//  else{
-//    if (upPressed == 1){
-//      RIT128x96x4Clear();
-//      switch(*m) {
-//      case 0:
-//        break;
-//      case 1:
-//        *m = 0;
-//        break;
-//      case 2:
-//        break;
-//      case 3:
-//        *m = 2;
-//        break;
-//      case 4:
-//        *m = 3;
-//        break;
-//      }
-//      upPressed = 0;
-//    }
-//    if (downPressed == 1){
-//      RIT128x96x4Clear();
-//      switch(*m) {
-//      case 0:
-//        *m = 1;
-//        break;
-//      case 1:
-//        break;
-//      case 2:
-//        *m = 3;
-//        break;
-//      case 3:
-//        *m = 4;
-//        break;
-//      case 4:
-//        break;
-//      }
-//      downPressed = 0;
-//    }
-//    if (leftPressed == 1){
-//      RIT128x96x4Clear();
-//      switch(*m) {
-//      case 2:
-//      case 3:
-//      case 4:
-//        *m = 0;
-//        break;
-//      case 5:
-//        *m = 1;
-//        break;
-//      case 6:
-//        *m = 2;
-//        break;
-//      case 7:
-//        *m = 3;
-//        break;
-//      case 8:
-//        *m = 4;
-//        break;
-//      }
-//      leftPressed = 0;
-//    }
-//  }
-//  if( *m == MENU_HOVER || *m == ANNUN_HOVER ){  // mode selection
-//    print("Please select a Mode:", 0, 0);
-//  
-//    if( *m == MENU_HOVER){//  menu mode hover
-//      print("* Menu", 0, 1);
-//    }
-//    else{
-//      print("  Menu", 0, 1);
-//    }
-//  
-//    if( *m == ANNUN_HOVER){//  annunciate hover
-//      print("* Annunciate", 0, 2);
-//    }
-//    else{
-//      print("  Annunciate", 0, 2);
-//    }
-//  }
-//   
-//  if( *m == BP_HOVER || *m == TEMP_HOVER || *m == HR_HOVER){  // Menu Mode
-//    print("Menu", 0, 0);
-//  
-//    if( *m == HR_HOVER ){//  Heart Rate hover
-//      print("* Heart Rate", 0, 1);
-//    }
-//    else{
-//      print("  Heart Rate", 0, 1);
-//    }
-//  
-//    if( *m == BP_HOVER){    //  Blood Pressure hover
-//      print("* Blood Pressure", 0, 3);
-//    }
-//    else{
-//      print("  Blood Pressure", 0, 3);
-//    }
-//  
-//    if( *m == TEMP_HOVER ){    //  Temperature hover
-//      print("* Temperature", 0, 5);
-//    }
-//    else{
-//      print("  Temperature", 0, 5);
-//    }
-//  }
-//  
-//  if( *m == BP || *m == HR || *m == TEMP){  // Menu option display
-//    print("Menu", 0, 0);
-//    
-//    if( *m == BP){  // Blood Pressure
-//      print("Blood Pressure", 0, 1);
-//      volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
-//      intPrint(((Display*)data)->bloodPressCorrectedBuff[j], 3, 0, 2);         //Systolic: should never be over 3 char
-//      print("/", 3, 2);
-//      intPrint(((Display*)data)->bloodPressCorrectedBuff[j+8], 5, 4, 2);         //Diastolic: should never be over 5 char
-//      print("mm Hg", 9, 2);
-//    }
-//  
-//    if( *m == TEMP){  // temperature
-//      print("Temperature:", 0, 1);
-//      fPrint(((Display*)data)->tempCorrectedBuff[j], 4, 0, 2);               //Temperature: should never be over 4 char
-//      print("C", 4, 2);
-//    }
-//    
-//    if( *m == HR){  // heart rate
-//      print("Heart Rate:", 0, 1);
-//      intPrint(((Display*)data)->pulseRateCorrectedBuff[j], 3, 0, 2);        //Heartrate: should never be over 3 char
-//      print("BPM", 3, 2);
-//    }
-//  }
-//   
-//  if( *m == ANNUNCIATE){  // Annunciate Mode
-//    print("Annunciate:", 0, 0);
-//    volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
-//    intPrint(((Display*)data)->bloodPressCorrectedBuff[j], 3, 0, 1);         //Systolic: should never be over 3 char
-//    print("/", 3, 1);
-//    intPrint(((Display*)data)->bloodPressCorrectedBuff[j+8], 5, 4, 1);         //Diastolic: should never be over 5 char
-//    print("mm Hg", 9, 1);
-//
-//    fPrint(((Display*)data)->tempCorrectedBuff[j], 4, 0, 2);               //Temperature: should never be over 4 char
-//    print("C", 4, 2);
-//    intPrint(((Display*)data)->pulseRateCorrectedBuff[j], 3, 6, 2);        //Heartrate: should never be over 3 char
-//    print("BPM", 9, 2);
-//
-//    intPrint(*((Display*)data)->batteryState, 3, 13, 2);    //battery: should never be over 3 char
-//  }
-//*/
-//}
-//
-//void annunciate(void* data) {
-//  
-///*    float t = (float)((WarningAlarm*)data)->tempRawBuff[j];
-//    unsigned int s = ((WarningAlarm*)data)->bloodPressRawBuff[j];
-//    float d = (float)((WarningAlarm*)data)->bloodPressRawBuff[j+8];
-//    unsigned int h = ((WarningAlarm*)data)->pulseRateRawBuff[j];
-//    short b = *(((WarningAlarm*)data)->batteryState);
-//
-//    t = 5 + (0.75*t);
-//    s = 9 + (2 * s);
-//    d = 6 + (1.5*d);
-//    h = 8 + (3 * h);
-//
-//    if(b < 40 || h > 100 || h < 60 || t > 37.8 || t < 36.1 || 
-//       s > 120 || s < 90 || d > 80 || d < 60 ){
-//         
-//      if (b < 40 && time % 30 == 0) { // three seconds have passed
-//        if( GPIO_PORTF_DATA_R == ~(0x01)){ // LED is off
-//          GPIO_PORTF_DATA_R |= 0x01; // Turn on the LED
-//        }else{
-//          GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
-//        }
-//      }
-//  
-//      if (h > 100 || h < 60) {
-//        if(time % 20 == 0){ // two second have passed
-//         if( GPIO_PORTF_DATA_R == ~(0x01)){ // LED is off
-//            GPIO_PORTF_DATA_R |= 0x01; // Turn on the LED
-//          }else{
-//            GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
-//          }
-//        } 
-//      }
-//      
-//      if (t > 37.8 || t < 36.1) {
-//        if(time % 10 == 0){ // one second has passed
-//         if( GPIO_PORTF_DATA_R == ~(0x01)){ // LED is off
-//          GPIO_PORTF_DATA_R |= 0x01; // Turn on the LED
-//          }else{
-//            GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
-//          }
-//        } 
-//      }
-//  
-//      if (s > 120 || s < 90 || d > 80 || d < 60) {
-//        if(time % 5 == 0){ // one half-second has passed
-//         if( GPIO_PORTF_DATA_R == ~(0x01)){ // LED is off
-//          GPIO_PORTF_DATA_R |= 0x01; // Turn on the LED
-//          }else{
-//            GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
-//          }
-//        }
-//        bpHigh = TRUE;
-//      }else{
-//        bpHigh = FALSE;
-//      }
-//  
-//      if(s > 144 && bpHigh == TRUE){ // 20% over max systolic
-//        if(time % 10 == 0){ // one second has passed
-//         if( speakerOn == FALSE){ // speaker is off
-//          PWMGenEnable(PWM_BASE, PWM_GEN_0); // Turn on the speaker
-//          speakerOn = TRUE;
-//          }else{
-//            PWMGenDisable(PWM_BASE, PWM_GEN_0); // Turn off the speaker
-//            speakerOn = FALSE;
-//          }
-//        }
-//      }else{
-//        PWMGenDisable(PWM_BASE, PWM_GEN_0); // Turn off the speaker
-//      }
-//    addFlags[6] = 1;            //add serial communication flag
-//    }else{ // no warnings
-//      GPIO_PORTF_DATA_R |= 0x01; // Turn on the LED
-//    }*/
-//}
-//
-//
-//void status(void* data) {
-//  if(time%100 == 0)
-//	*(((Status*)data)->batteryState) -= 1;              //decrement battery by 1
-//}
-//
-//void schedule(void* data) {
-//        /*if(measureDelete != 0){
-//          resetMeasureBufferAt(indexToDel);
-//          measureDelete = 0;
-//        }*/
-//       /* for (int j = 0; j < NUMTASKS; j++){
-//          if(addFlags[j] != 0){
-//            addFlags[j] = 0;
-//            llEnqueue(taskQueue,&tasks[j]);
-//          }
-//        }
-//        if(time%10 == 0 && (time/10)%2 == 0){
-//          addFlags[0] = 1; //flag measure
-//          addFlags[3] = 1; //flag annunciate
-//          addFlags[4] = 1; //flag status
-//        }*/
-//}
-//
-//void print(char* c, int hOffset, int vOffset) {                        // string, column, row
-//  //RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
-//}
-//
-//void intPrint(int c, int size, int hOffset, int vOffset) {             // number, size of number,column, row
-//  /*char dec[2];
-//  dec[1] = '\0';
-//  int rem = c;
-//  for (int i = size - 1; i >= 0; i--) {
-//    dec[0] = rem % 10 + '0';
-//    rem = rem / 10;
-//    RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
-//  }*/
-//}
-//
-////print of a float with one decimal
-//void fPrint(float c, int size, int hOffset, int vOffset) {// number, size of number,column, row 
-//  /*char dec[2];
-//  dec[1] = '\0';
-//  int rem = (int)c * 10;
-//  for (int i = size - 1; i >= 0; i--) {
-//    if (i == size - 2)
-//      RIT128x96x4StringDraw(".", hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
-//    else {
-//      dec[0] = rem % 10 + '0';
-//      rem = rem / 10;
-//      RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
-//    }
-//  }*/
-//}
-//
-//void fillStructs(Measurements* m, ComputeData* c, Display* d, Status* s, WarningAlarm* w, Keypad* k, Communications* z) {
-//
-//  m->tempRawBuff = &tempRawBuff[0];                   //measure
-//  m->bloodPressRawBuff = &bloodPressRawBuff[0];
-//  m->pulseRateRawBuff = &pulseRateRawBuff[0];
-//  m->reverseTemp = FALSE;
-//  m->sysComplete = FALSE;
-//  m->reversePulse = FALSE;
-//  
-//  c->tempRawBuff = &tempRawBuff[0];                            //compute
-//  c->bloodPressRawBuff = &bloodPressRawBuff[0];
-//  c->pulseRateRawBuff = &pulseRateRawBuff[0];
-//  c->tempCorrectedBuff = &tempCorrectedBuff[0];
-//  c->bloodPressCorrectedBuff = &bloodPressCorrectedBuff[0];
-//  c->pulseRateCorrectedBuff = &pulseRateCorrectedBuff[0];
-//  
-//  d->tempCorrectedBuff = &tempCorrectedBuff[0];                //display
-//  d->bloodPressCorrectedBuff = &bloodPressCorrectedBuff[0];
-//  d->pulseRateCorrectedBuff = &pulseRateCorrectedBuff[0];
-//  d->batteryState = &batteryState;
-//  d->mode = &mode;
-//  
-//  s->batteryState = &batteryState;                    //status
-//  
-//  w->tempRawBuff = &tempRawBuff[0];                   //warningAlarm
-//  w->bloodPressRawBuff = &bloodPressRawBuff[0];
-//  w->pulseRateRawBuff = &pulseRateRawBuff[0];
-//  w->batteryState = &batteryState;
-//  
-//  k->mode = &mode;
-//  k->measurementSelection = &measurementSelection;
-//  k->scroll = &scroll;
-//  k->select = &select;
-//  k->alarmAcknowledge = &alarmAcknowledge;
-//  
-//  z->tempCorrectedBuff = &tempCorrectedBuff[0];
-//  z->bloodPressCorrectedBuff = &bloodPressCorrectedBuff[0];
-//  z->pulseRateCorrectedBuff = &pulseRateCorrectedBuff[0];
-//  z->batteryState  = &batteryState;
-//}
-//
-//void fillBuffers() {
-//  for(int i = 0; i < 8; i++) {
-//    tempRawBuff[i] = 75;
-//    bloodPressRawBuff[i] = 80;
-//    bloodPressRawBuff[i+8] = 80;
-//    pulseRateRawBuff[i] = 0;
-//  }
-//}
-//
-//void resetMeasureBufferAt(int j) {
-//    tempRawBuff[j] = 75;
-//    bloodPressRawBuff[j] = 80;
-//    bloodPressRawBuff[j+8] = 80;
-//    pulseRateRawBuff[j] = 0;
-//}
+/* New Functions */
+void vDisplayMaker(void *pvParameters){//builds char buffer
+  mode = 0;
+  xOLEDMessage xMessage;
+  memset( displayBuffer, 0, 300 );
+  TickType_t xLastWakeTime;
+  const char notSelected = ' ';
+  const char selected = '*';
+  const TickType_t xFrequency = 20; //ticks to wait
+  xLastWakeTime = xTaskGetTickCount();
+  char* temp;
+  
+  for(;;){
+     vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    if (selectPressed == 1){
+      selectPressed = 0;
+      upPressed = 0;
+      downPressed = 0;
+      RIT128x96x4Clear();
+      switch(mode) {
+      case 0:
+        mode = 2;
+        break;
+      case 1:
+        mode = 5;      
+        break;
+      case 2:
+        mode = 6;
+        break;
+      case 3:
+        mode = 7;
+        break;
+      case 4:
+        mode = 8;
+        break;
+      case 5:
+        bpHigh = FALSE;
+        break;
+      }
+    }
+    else{
+      if (upPressed == 1){
+        switch(mode) {
+        case 0:
+          break;
+        case 1:
+          mode = 0;
+          break;
+        case 2:
+          break;
+        case 3:
+          mode = 2;
+          break;
+        case 4:
+          mode = 3;
+          break;
+        }
+        upPressed = 0;
+      }
+      if (downPressed == 1){
+        RIT128x96x4Clear();
+        switch(mode) {
+        case 0:
+          mode = 1;
+          break;
+        case 1:
+          break;
+        case 2:
+          mode = 3;
+          break;
+        case 3:
+          mode = 4;
+          break;
+        case 4:
+          break;
+        }
+        downPressed = 0;
+      }
+      if (leftPressed == 1){
+        RIT128x96x4Clear();
+        switch(mode) {
+        case 2:
+        case 3:
+        case 4:
+          mode = 0;
+          break;
+        case 5:
+          mode = 1;
+          break;
+        case 6:
+          mode = 2;
+          break;
+        case 7:
+          mode = 3;
+          break;
+        case 8:
+          mode = 4;
+          break;
+        }
+        leftPressed = 0;
+      }
+    }
+    
+    if( mode == MENU_HOVER || mode == ANNUN_HOVER ){  // mode selection
+      temp = displayBuffer;
+      sprintf( displayBuffer, "Please select a Mode:");
+      temp += strlen( "Please select a Mode:" );
+      temp = 0x00;
+      xMessage.pcMessage = (signed char *)displayBuffer;
+      xQueueSend( xOLEDQueue, ( void * ) &xMessage, ( TickType_t ) 0 );      
+      if( mode == MENU_HOVER){//  menu mode hover
+        //print("* Menu", 0, 1);
+      }
+      else{
+        //print("  Menu", 0, 1);
+      }
+      
+      if( mode == ANNUN_HOVER){//  annunciate hover
+        //print("* Annunciate", 0, 2);
+      }
+      else{
+        //print("  Annunciate", 0, 2);
+      }
+    }
+    
+    if( mode == BP_HOVER || mode == TEMP_HOVER || mode == HR_HOVER){  // Menu Mode
+      //print("Menu", 0, 0);
+      
+      if( mode == HR_HOVER ){//  Heart Rate hover
+        //print("* Heart Rate", 0, 1);
+      }
+      else{
+        //print("  Heart Rate", 0, 1);
+      }
+      
+      if( mode == BP_HOVER){    //  Blood Pressure hover
+        //print("* Blood Pressure", 0, 3);
+      }
+      else{
+        //print("  Blood Pressure", 0, 3);
+      }
+      
+      if( mode == TEMP_HOVER ){    //  Temperature hover
+        //print("* Temperature", 0, 5);
+      }
+      else{
+        //print("  Temperature", 0, 5);
+      }
+    }
+    
+    if( mode == BP || mode == HR || mode == TEMP){  // Menu option display
+      //print("Menu", 0, 0);
+      
+      if( mode == BP){  // Blood Pressure
+        //print("Blood Pressure", 0, 1);
+        //volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
+        //intPrint(((Display*)data)->bloodPressCorrectedBuff[j], 3, 0, 2);         //Systolic: should never be over 3 char
+        //print("/", 3, 2);
+        //intPrint(((Display*)data)->bloodPressCorrectedBuff[j+8], 5, 4, 2);         //Diastolic: should never be over 5 char        
+        //print("mm Hg", 9, 2);
+      }
+      
+      if( mode == TEMP){  // temperature
+        //print("Temperature:", 0, 1);
+        //fPrint(((Display*)data)->tempCorrectedBuff[j], 4, 0, 2);               //Temperature: should never be over 4 char
+        //print("C", 4, 2);
+      }
+      
+      if( mode == HR){  // heart rate
+        //print("Heart Rate:", 0, 1);
+        //intPrint(((Display*)data)->pulseRateCorrectedBuff[j], 3, 0, 2);        //Heartrate: should never be over 3 char
+        //print("BPM", 3, 2);
+      }
+    }
+    
+    if( mode == ANNUNCIATE){  // Annunciate Mode
+      /*print("Annunciate:", 0, 0);
+      volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
+      intPrint(((Display*)data)->bloodPressCorrectedBuff[j], 3, 0, 1);         //Systolic: should never be over 3 char
+      print("/", 3, 1);
+      intPrint(((Display*)data)->bloodPressCorrectedBuff[j+8], 5, 4, 1);         //Diastolic: should never be over 5 char
+      print("mm Hg", 9, 1);
+      
+      fPrint(((Display*)data)->tempCorrectedBuff[j], 4, 0, 2);               //Temperature: should never be over 4 char
+      print("C", 4, 2);
+      intPrint(((Display*)data)->pulseRateCorrectedBuff[j], 3, 6, 2);        //Heartrate: should never be over 3 char
+      print("BPM", 9, 2);
+      
+      intPrint(*((Display*)data)->batteryState, 3, 13, 2);    //battery: should never be over 3 char
+    */
+    }
+  }
+}
 
 /* Built in Functions */
 void prvSetupHardware( void ){
@@ -1056,6 +591,20 @@ void prvSetupHardware( void ){
   SysCtlPeripheralEnable( SYSCTL_PERIPH_GPIOF );
   GPIODirModeSet( GPIO_PORTF_BASE, (GPIO_PIN_2 | GPIO_PIN_3), GPIO_DIR_MODE_HW );
   GPIOPadConfigSet( GPIO_PORTF_BASE, (GPIO_PIN_2 | GPIO_PIN_3 ), GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD );
+  
+  /* setup buttons */
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);         
+  GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
+  GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+  GPIOIntTypeSet(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_FALLING_EDGE);
+  GPIOPinIntEnable(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
+  IntEnable(INT_GPIOE);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);  
+  GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_1);
+  GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPU);
+  GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_FALLING_EDGE);
+  GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_1);
+  IntEnable(INT_GPIOF);
   
   vParTestInitialise();
 }
@@ -1178,7 +727,7 @@ void vOLEDTask( void *pvParameters ){
   /* Initialise the OLED and display a startup message. */
   vOLEDInit( ulSSI_FREQUENCY );
   vOLEDStringDraw( "POWERED BY FreeRTOS", 0, 0, mainFULL_SCALE );
-  //vOLEDImageDraw( pucImage, 0, mainCHARACTER_HEIGHT + 1, bmpBITMAP_WIDTH, bmpBITMAP_HEIGHT );
+  vOLEDImageDraw( pucImage, 0, mainCHARACTER_HEIGHT + 1, bmpBITMAP_WIDTH, bmpBITMAP_HEIGHT );
   
   for( ;; ){
     /* Wait for a message to arrive that requires displaying. */
@@ -1194,7 +743,7 @@ void vOLEDTask( void *pvParameters ){
     
     /* Display the message along with the maximum jitter time from the
 		high priority time test. */
-    sprintf( cMessage, "%s [%uns]", xMessage.pcMessage, ulMaxJitter * mainNS_PER_CLOCK );
+    sprintf( cMessage, "%s, xMessage.pcMessage);// [%uns]", xMessage.pcMessage, ulMaxJitter * mainNS_PER_CLOCK );
     vOLEDStringDraw( cMessage, 0, ulY, mainFULL_SCALE );
   }
 }
@@ -1212,7 +761,7 @@ void vAssertCalled( const char *pcFile, unsigned long ulLine ){
   volatile unsigned long ulSetTo1InDebuggerToExit = 0;
   
   taskENTER_CRITICAL();{
-    while( ulSetTo1InDebuggerToExit == 0 ){
+    while( ulSetTo1InDebuggerToExit == 1 ){
       /* Nothing do do here.  Set the loop variable to a non zero value in
 			the debugger to step out of this function to the point that caused
 			the assertion. */
