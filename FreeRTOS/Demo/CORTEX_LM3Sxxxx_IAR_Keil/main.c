@@ -611,67 +611,67 @@ void prvSetupHardware( void ){
 /*-----------------------------------------------------------*/
 
 void vApplicationTickHook( void ){
-  static xOLEDMessage xMessage = { "PASS" };
-  static unsigned long ulTicksSinceLastDisplay = 0;
-  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-  
-  /* Called from every tick interrupt.  Have enough ticks passed to make it
-	time to perform our health status check again? */
-  ulTicksSinceLastDisplay++;
-  if( ulTicksSinceLastDisplay >= mainCHECK_DELAY ){
-    ulTicksSinceLastDisplay = 0;
-    
-    /* Has an error been found in any task? */
-    if( xAreGenericQueueTasksStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN GEN Q";
-    }
-    else if( xIsCreateTaskStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN CREATE";
-    }
-    else if( xAreIntegerMathsTaskStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN MATH";
-    }
-    else if( xAreIntQueueTasksStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN INT QUEUE";
-    }
-    else if( xAreBlockingQueuesStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN BLOCK Q";
-    }
-    else if( xAreBlockTimeTestTasksStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN BLOCK TIME";
-    }
-    else if( xAreSemaphoreTasksStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN SEMAPHORE";
-    }
-    else if( xArePollingQueuesStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN POLL Q";
-    }
-    else if( xAreQueuePeekTasksStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN PEEK Q";
-    }
-    else if( xAreRecursiveMutexTasksStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN REC MUTEX";
-    }
-    else if( xAreQueueSetTasksStillRunning() != pdPASS ){
-      xMessage.pcMessage = "ERROR IN Q SET";
-    }
-    else if( xAreEventGroupTasksStillRunning() != pdTRUE ){
-      xMessage.pcMessage = "ERROR IN EVNT GRP";
-    }
-    
-    configASSERT( strcmp( ( const char * ) xMessage.pcMessage, "PASS" ) == 0 );
-    
-    /* Send the message to the OLED gatekeeper for display. */
-    xHigherPriorityTaskWoken = pdFALSE;
-    xQueueSendFromISR( xOLEDQueue, &xMessage, &xHigherPriorityTaskWoken );
-  }
-  
-  /* Write to a queue that is in use as part of the queue set demo to
-	demonstrate using queue sets from an ISR. */
-  vQueueSetAccessQueueSetFromISR();
-  
-  /* Call the event group ISR tests. */
-  vPeriodicEventGroupsProcessing();
+//  static xOLEDMessage xMessage = { "PASS" };
+//  static unsigned long ulTicksSinceLastDisplay = 0;
+//  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+//  
+//  /* Called from every tick interrupt.  Have enough ticks passed to make it
+//	time to perform our health status check again? */
+//  ulTicksSinceLastDisplay++;
+//  if( ulTicksSinceLastDisplay >= mainCHECK_DELAY ){
+//    ulTicksSinceLastDisplay = 0;
+//    
+//    /* Has an error been found in any task? */
+//    if( xAreGenericQueueTasksStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN GEN Q";
+//    }
+//    else if( xIsCreateTaskStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN CREATE";
+//    }
+//    else if( xAreIntegerMathsTaskStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN MATH";
+//    }
+//    else if( xAreIntQueueTasksStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN INT QUEUE";
+//    }
+//    else if( xAreBlockingQueuesStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN BLOCK Q";
+//    }
+//    else if( xAreBlockTimeTestTasksStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN BLOCK TIME";
+//    }
+//    else if( xAreSemaphoreTasksStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN SEMAPHORE";
+//    }
+//    else if( xArePollingQueuesStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN POLL Q";
+//    }
+//    else if( xAreQueuePeekTasksStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN PEEK Q";
+//    }
+//    else if( xAreRecursiveMutexTasksStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN REC MUTEX";
+//    }
+//    else if( xAreQueueSetTasksStillRunning() != pdPASS ){
+//      xMessage.pcMessage = "ERROR IN Q SET";
+//    }
+//    else if( xAreEventGroupTasksStillRunning() != pdTRUE ){
+//      xMessage.pcMessage = "ERROR IN EVNT GRP";
+//    }
+//    
+//    configASSERT( strcmp( ( const char * ) xMessage.pcMessage, "PASS" ) == 0 );
+//    
+//    /* Send the message to the OLED gatekeeper for display. */
+//    xHigherPriorityTaskWoken = pdFALSE;
+//    xQueueSendFromISR( xOLEDQueue, &xMessage, &xHigherPriorityTaskWoken );
+//  }
+//  
+//  /* Write to a queue that is in use as part of the queue set demo to
+//	demonstrate using queue sets from an ISR. */
+//  vQueueSetAccessQueueSetFromISR();
+//  
+//  /* Call the event group ISR tests. */
+//  vPeriodicEventGroupsProcessing();
 }
 /*-----------------------------------------------------------*/
 
