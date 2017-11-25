@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <fileChecksum>1718267238</fileChecksum>
+  <configuration>
+    <name>Debug</name>
+    <outputs>
+      <file>$PROJ_DIR$\..\inc\hw_adc.h</file>
+      <file>$PROJ_DIR$\cpu.c</file>
+      <file>$PROJ_DIR$\i2s.c</file>
+      <file>$PROJ_DIR$\comp.c</file>
+      <file>$PROJ_DIR$\ewarm\Obj\sysctl.pbi</file>
+      <file>$PROJ_DIR$\ethernet.c</file>
+      <file>$PROJ_DIR$\..\inc\hw_ints.h</file>
+      <file>$PROJ_DIR$\epi.c</file>
+      <file>$PROJ_DIR$\hibernate.c</file>
+      <file>$PROJ_DIR$\ewarm\Obj\can.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\gpio.pbi</file>
+      <file>$PROJ_DIR$\flash.c</file>
+      <file>$PROJ_DIR$\..\inc\hw_i2c.h</file>
+      <file>$PROJ_DIR$\can.c</file>
+      <file>$PROJ_DIR$\i2c.c</file>
+      <file>$PROJ_DIR$\adc.c</file>
+      <file>$PROJ_DIR$\gpio.c</file>
+      <file>$PROJ_DIR$\..\inc\hw_can.h</file>
+      <file>$PROJ_DIR$\..\inc\hw_i2s.h</file>
+      <file>$PROJ_DIR$\mpu.c</file>
+      <file>$PROJ_DIR$\ssi.c</file>
+      <file>$PROJ_DIR$\ewarm\Obj\epi.o</file>
+      <file>$PROJ_DIR$\sysctl.c</file>
+      <file>$PROJ_DIR$\ewarm\Obj\ethernet.pbi</file>
+      <file>$PROJ_DIR$\udma.c</file>
+      <file>$PROJ_DIR$\epi.h</file>
+      <file>$PROJ_DIR$\pwm.c</file>
+      <file>$PROJ_DIR$\watchdog.c</file>
+      <file>$PROJ_DIR$\systick.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\ethernet.o</file>
+      <file>$PROJ_DIR$\interrupt.c</file>
+      <file>$PROJ_DIR$\interrupt.h</file>
+      <file>$PROJ_DIR$\usb.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\watchdog.pbi</file>
+      <file>$PROJ_DIR$\usb.c</file>
+      <file>$PROJ_DIR$\ewarm\Obj\timer.pbi</file>
+      <file>$PROJ_DIR$\qei.c</file>
+      <file>$PROJ_DIR$\..\inc\hw_comp.h</file>
+      <file>$PROJ_DIR$\systick.c</file>
+      <file>$PROJ_DIR$\uart.c</file>
+      <file>$PROJ_DIR$\sysctl.h</file>
+      <file>$PROJ_DIR$\gpio.h</file>
+      <file>$PROJ_DIR$\..\inc\hw_sysctl.h</file>
+      <file>$PROJ_DIR$\timer.c</file>
+      <file>$PROJ_DIR$\hibernate.h</file>
+      <file>$PROJ_DIR$\ewarm\Exe\driverlib.a</file>
+      <file>$PROJ_DIR$\..\inc\hw_usb.h</file>
+      <file>$PROJ_DIR$\i2c.h</file>
+      <file>$PROJ_DIR$\watchdog.h</file>
+      <file>$PROJ_DIR$\..\inc\hw_memmap.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\sysctl.o</file>
+      <file>$PROJ_DIR$\..\inc\hw_gpio.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\comp.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\gpio.o</file>
+      <file>$PROJ_DIR$\debug.h</file>
+      <file>$PROJ_DIR$\..\inc\hw_ethernet.h</file>
+      <file>$PROJ_DIR$\timer.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\cpu.pbi</file>
+      <file>$PROJ_DIR$\..\inc\hw_hibernate.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\epi.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\hibernate.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\timer.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\systick.pbi</file>
+      <file>$PROJ_DIR$\comp.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\usb.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\pwm.pbi</file>
+      <file>$PROJ_DIR$\..\inc\hw_udma.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\pwm.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\uart.pbi</file>
+      <file>$PROJ_DIR$\uart.h</file>
+      <file>$PROJ_DIR$\..\inc\hw_uart.h</file>
+      <file>$PROJ_DIR$\flash.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\i2s.o</file>
+      <file>$PROJ_DIR$\qei.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\driverlib.pbd</file>
+      <file>$PROJ_DIR$\ewarm\Obj\qei.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\qei.o</file>
+      <file>$PROJ_DIR$\..\inc\hw_ssi.h</file>
+      <file>$PROJ_DIR$\adc.h</file>
+      <file>$PROJ_DIR$\pwm.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\mpu.o</file>
+      <file>$PROJ_DIR$\..\inc\hw_pwm.h</file>
+      <file>$PROJ_DIR$\mpu.h</file>
+      <file>$PROJ_DIR$\..\inc\hw_timer.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\usb.o</file>
+      <file>$PROJ_DIR$\..\inc\hw_nvic.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\adc.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\hibernate.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\udma.o</file>
+      <file>$PROJ_DIR$\i2s.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\i2c.pbi</file>
+      <file>$PROJ_DIR$\can.h</file>
+      <file>$PROJ_DIR$\..\inc\hw_epi.h</file>
+      <file>$PROJ_DIR$\..\inc\hw_qei.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\flash.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\watchdog.o</file>
+      <file>$PROJ_DIR$\ethernet.h</file>
+      <file>$PROJ_DIR$\udma.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\udma.pbi</file>
+      <file>$PROJ_DIR$\..\inc\hw_types.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\ssi.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\comp.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\can.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\i2s.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\mpu.pbi</file>
+      <file>$PROJ_DIR$\..\inc\hw_flash.h</file>
+      <file>$PROJ_DIR$\cpu.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\cpu.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\adc.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\flash.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\i2c.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\uart.o</file>
+      <file>$PROJ_DIR$\ssi.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\systick.o</file>
+      <file>$PROJ_DIR$\ewarm\Obj\ssi.o</file>
+      <file>$PROJ_DIR$\..\inc\hw_watchdog.h</file>
+      <file>$PROJ_DIR$\ewarm\Obj\interrupt.pbi</file>
+      <file>$PROJ_DIR$\ewarm\Obj\interrupt.o</file>
+    </outputs>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>IARCHIVE</name>
+          <file> 45</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\cpu.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 107</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 57</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 106</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 106</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\i2s.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 72</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 103</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 18 6 49 99 54 89 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 18 6 49 99 54 89 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\comp.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 101</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 37 6 49 99 63 54 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 37 6 49 99 63 54 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\ethernet.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 29</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 23</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 55 6 49 99 54 96 40 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 55 6 49 99 54 96 40 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\epi.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 21</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 59</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 92 6 49 99 54 25 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 92 6 49 99 54 25 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\hibernate.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 60</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 87</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 58 6 42 99 54 44 40 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 58 6 42 99 54 44 40 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\flash.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 109</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 94</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 105 6 42 99 54 71 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 105 6 42 99 54 71 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\can.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 102</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 9</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 17 6 85 49 99 91 54 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 17 6 85 49 99 91 54 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\i2c.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 110</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 90</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 12 6 49 42 99 54 47 40 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 12 6 49 42 99 54 47 40 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\adc.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 108</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 86</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 0 6 49 99 78 54 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 0 6 49 99 78 54 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\gpio.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 53</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 51 6 49 42 99 54 41 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 51 6 49 42 99 54 41 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\mpu.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 80</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 104</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 85 99 54 31 82</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 85 99 54 31 82</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\ssi.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 114</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 100</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 49 77 99 54 31 112 40</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 49 77 99 54 31 112 40</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\sysctl.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 50</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 4</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 85 42 99 106 54 31 40</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 85 42 99 106 54 31 40</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\udma.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 88</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 98</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 99 66 54 31 97</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 99 66 54 31 97</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\pwm.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 67</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 65</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 49 81 42 99 54 31 79</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 49 81 42 99 54 31 79</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\watchdog.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 95</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 33</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 49 99 115 54 31 48</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 49 99 115 54 31 48</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\interrupt.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 117</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 116</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 85 99 106 54 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 85 99 106 54 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\usb.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 84</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 64</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 49 99 46 54 31 97 32</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 49 99 46 54 31 97 32</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\qei.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 76</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 75</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 49 93 99 54 31 73</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 49 93 99 54 31 73</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\systick.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 113</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 62</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 85 99 54 31 28</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 85 99 54 31 28</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\uart.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 111</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 68</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 49 42 99 70 54 31 69 40</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 49 42 99 70 54 31 69 40</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\timer.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 61</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 35</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 6 49 83 99 54 31 56</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6 49 83 99 54 31 56</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\ewarm\Obj\driverlib.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 86 9 52 57 59 23 94 10 87 90 103 116 104 65 75 100 4 62 35 68 98 64 33</file>
+        </tool>
+      </inputs>
+    </file>
+  </configuration>
+</project>
+
+

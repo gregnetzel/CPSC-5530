@@ -162,6 +162,9 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include <string.h>
 #include "hw_ints.h"
 #include "interrupt.h"
+#include "driverlib/pwm.h"
+#include "inc/hw_gpio.h"
+#include "inc/lm3s8962.h"
 /*-----------------------------------------------------------*/
 
 /* The time between cycles of the 'check' functionality (defined within the
@@ -297,7 +300,7 @@ volatile int upPressed = 0;
 volatile int downPressed = 0;
 volatile int leftPressed = 0;
 volatile int selectPressed = 0;
-volatile int addFlags[] = {0,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
+//volatile int addFlags[] = {0,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
 volatile int measureDelete = 0;
 
 //interrupts
@@ -566,7 +569,7 @@ void vDisplayMaker(void *pvParameters){ //print display
 
 void vMeasure(void *pvParameters){
   TickType_t xLastWakeTime;
-  const TickType_t xFrequency = 200; //ticks to wait
+  const TickType_t xFrequency = 2000; //ticks to wait
   xLastWakeTime = xTaskGetTickCount();
   
   for(;;){
@@ -713,18 +716,70 @@ void vCompute(void *pvParameters){
 
 void vAnnunciate(void *pvParameters){
   TickType_t xLastWakeTime;
-  const TickType_t xFrequency = 20; //ticks to wait
+  const TickType_t xFrequency = 20;
+  const TickType_t xBPfreq = 200;
+  const TickType_t xHRfreq = 300;
+  const TickType_t xTempfreq = 400;
+  const TickType_t xBatfreq = 100;
   xLastWakeTime = xTaskGetTickCount();
-  
+  int a; //for blinking loops
   for(;;){
      vTaskDelayUntil( &xLastWakeTime, xFrequency );
      
+     float t = (float)tempRawBuff[j];
+     unsigned int s = bloodPressRawBuff[j];
+     float d = (float)bloodPressRawBuff[j+8];
+     unsigned int h = pulseRateRawBuff[j];
+     short b = batteryState;
+     
+     t = 5 + (0.75*t);
+     s = 9 + (2 * s);
+     d = 6 + (1.5*d);
+     h = 8 + (3 * h);
+     
+     if( b < 40 ){//battery
+       for( a = 0; a < 3; a++ ){
+         GPIO_PORTF_DATA_R |= 0x01;
+         vTaskDelayUntil( &xLastWakeTime, xBatfreq );
+         GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
+         vTaskDelayUntil( &xLastWakeTime, xBatfreq );
+       }       
+     }
+     if( h > 100 || h < 60 ){//hr
+       for( a = 0; a < 3; a++ ){
+         GPIO_PORTF_DATA_R |= 0x01;
+         vTaskDelayUntil( &xLastWakeTime, xHRfreq );
+         GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
+         vTaskDelayUntil( &xLastWakeTime, xHRfreq );
+       }
+     }
+     if(t > 37.8 || t < 36.1){//temp
+       for( a = 0; a < 3; a++ ){
+         GPIO_PORTF_DATA_R |= 0x01;
+         vTaskDelayUntil( &xLastWakeTime, xTempfreq );
+         GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
+         vTaskDelayUntil( &xLastWakeTime, xTempfreq );
+       }
+     }
+     if(s > 120 || s < 90 || d > 80 || d < 60){//bp
+       if(s > 144){
+         PWMGenEnable(PWM_BASE, PWM_GEN_0); 
+         vTaskDelayUntil( &xLastWakeTime, xBPfreq );
+         PWMGenDisable(PWM_BASE, PWM_GEN_0);
+       }
+       for( a = 0; a < 3; a++ ){
+         GPIO_PORTF_DATA_R |= 0x01;
+         vTaskDelayUntil( &xLastWakeTime, xBPfreq );
+         GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
+         vTaskDelayUntil( &xLastWakeTime, xBPfreq );
+       }      
+     }
   }
 }
 
 void vStatus(void *pvParameters){
   TickType_t xLastWakeTime;
-  const TickType_t xFrequency = 200; //ticks to wait
+  const TickType_t xFrequency = 2000; //ticks to wait
   xLastWakeTime = xTaskGetTickCount();
   
   for(;;){
@@ -794,6 +849,18 @@ void prvSetupHardware( void ){
   GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_FALLING_EDGE);
   GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_1);
   IntEnable(INT_GPIOF);
+  
+  /* setup speaker */
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);    // speaker
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+  GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0);
+  GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1);
+  unsigned long ulPeriod = SysCtlClockGet() / 440;
+  PWMGenConfigure(PWM_BASE, PWM_GEN_0, PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
+  PWMGenPeriodSet(PWM_BASE, PWM_GEN_0, ulPeriod);
+  PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, ulPeriod / 4);
+  PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
   
   vParTestInitialise();
 }
