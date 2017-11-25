@@ -251,12 +251,15 @@ volatile int i = 0;
 volatile int j = 0;               // circular buffer usage
 volatile int indexToDel = 0;
 
+
+#define hSpacing 8
+#define vSpacing 14
+
 enum displayMode { MENU_HOVER = 0, ANNUN_HOVER = 1, 
                    HR_HOVER = 2, BP_HOVER = 3, 
                   TEMP_HOVER = 4, ANNUNCIATE = 5, 
                   HR = 6, BP = 7, TEMP = 8};
 typedef enum displayMode displayMode;
-char* displayBuffer; 
 
 //Data Variables
 unsigned int tempRawBuff[8];
@@ -284,6 +287,10 @@ unsigned char tempOOR = '0';
 int bpHigh = FALSE;
 int speakerOn = FALSE;
 int pulseLow = FALSE;
+volatile unsigned long pulseTime = 0; //pulse transducer time
+int reverseTemp;
+int sysComplete;
+int reversePulse;
 
 //flags
 volatile int upPressed = 0;
@@ -318,7 +325,13 @@ void dirPressedHandler(void){//port E pins 0-3 up down left right
 
 //functions
 void vDisplayMaker(void *pvParameters);
-
+void vMeasure(void *pvParameters);
+void vCompute(void *pvParameters);
+void vAnnunciate(void *pvParameters);
+void vStatus(void *pvParameters);
+void print(char* c, int hOffset, int vOffset);
+void intPrint(int c, int size, int hOffset, int vOffset);
+void fPrint(float c, int size, int hOffset, int vOffset);
 /*************************************************************************
  * Please ensure to read http://www.freertos.org/portlm3sx965.html
  * which provides information on configuring and running this demo for the
@@ -332,19 +345,7 @@ int main( void ){
 	are received via this queue. */
   xOLEDQueue = xQueueCreate( mainOLED_QUEUE_SIZE, sizeof( xOLEDMessage ) );
   
-  /* Start the standard demo tasks. 
-  vStartIntegerMathTasks( mainINTEGER_TASK_PRIORITY );
-  vStartGenericQueueTasks( mainGEN_QUEUE_TASK_PRIORITY );
-  vStartInterruptQueueTasks();
-  vStartRecursiveMutexTasks();
-  vStartBlockingQueueTasks( mainBLOCK_Q_PRIORITY );
-  vCreateBlockTimeTasks();
-  vStartSemaphoreTasks( mainSEM_TEST_PRIORITY );
-  vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );
-  vStartQueuePeekTasks();
-  vStartQueueSetTasks();
-  vStartEventGroupTasks();
-  */
+  
   /* Exclude some tasks if using the kickstart version to ensure we stay within
 	the 32K code size limit. */
 #if mainINCLUDE_WEB_SERVER != 0 
@@ -358,8 +359,11 @@ int main( void ){
 #endif
   
   
-  xTaskCreate( vDisplayMaker, "DISP", 2000, NULL, tskIDLE_PRIORITY, NULL);
-  /* Start the tasks defined within this file/specific to this demo. */
+  xTaskCreate( vDisplayMaker, "DISP", 200, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vMeasure, "MEAS", 200, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vCompute, "COMP", 200, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vAnnunciate, "ANNU", 200, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vStatus, "STAT", 200, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vOLEDTask, "OLED", mainOLED_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
   
   /* The suicide tasks must be created last as they need to know how many
@@ -381,16 +385,11 @@ int main( void ){
 }
 /*-----------------------------------------------------------*/
 /* New Functions */
-void vDisplayMaker(void *pvParameters){//builds char buffer
+void vDisplayMaker(void *pvParameters){ //print display
   mode = 0;
-  xOLEDMessage xMessage;
-  memset( displayBuffer, 0, 300 );
   TickType_t xLastWakeTime;
-  const char notSelected = ' ';
-  const char selected = '*';
-  const TickType_t xFrequency = 20; //ticks to wait
+  const TickType_t xFrequency = 200; //ticks to wait
   xLastWakeTime = xTaskGetTickCount();
-  char* temp;
   
   for(;;){
      vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -484,94 +483,284 @@ void vDisplayMaker(void *pvParameters){//builds char buffer
     }
     
     if( mode == MENU_HOVER || mode == ANNUN_HOVER ){  // mode selection
-      temp = displayBuffer;
-      sprintf( displayBuffer, "Please select a Mode:");
-      temp += strlen( "Please select a Mode:" );
-      temp = 0x00;
-      xMessage.pcMessage = (signed char *)displayBuffer;
-      xQueueSend( xOLEDQueue, ( void * ) &xMessage, ( TickType_t ) 0 );      
+      print("Please select a Mode:", 0, 0);
       if( mode == MENU_HOVER){//  menu mode hover
-        //print("* Menu", 0, 1);
+        print("* Menu", 0, 1);
       }
       else{
-        //print("  Menu", 0, 1);
+        print("  Menu", 0, 1);
       }
       
       if( mode == ANNUN_HOVER){//  annunciate hover
-        //print("* Annunciate", 0, 2);
+        print("* Annunciate", 0, 2);
       }
       else{
-        //print("  Annunciate", 0, 2);
+        print("  Annunciate", 0, 2);
       }
     }
     
     if( mode == BP_HOVER || mode == TEMP_HOVER || mode == HR_HOVER){  // Menu Mode
-      //print("Menu", 0, 0);
+      print("Menu", 0, 0);
       
       if( mode == HR_HOVER ){//  Heart Rate hover
-        //print("* Heart Rate", 0, 1);
+        print("* Heart Rate", 0, 1);
       }
       else{
-        //print("  Heart Rate", 0, 1);
+        print("  Heart Rate", 0, 1);
       }
       
       if( mode == BP_HOVER){    //  Blood Pressure hover
-        //print("* Blood Pressure", 0, 3);
+        print("* Blood Pressure", 0, 3);
       }
       else{
-        //print("  Blood Pressure", 0, 3);
+        print("  Blood Pressure", 0, 3);
       }
       
       if( mode == TEMP_HOVER ){    //  Temperature hover
-        //print("* Temperature", 0, 5);
+        print("* Temperature", 0, 5);
       }
       else{
-        //print("  Temperature", 0, 5);
+        print("  Temperature", 0, 5);
       }
     }
     
     if( mode == BP || mode == HR || mode == TEMP){  // Menu option display
-      //print("Menu", 0, 0);
-      
+      print("Menu", 0, 0);
       if( mode == BP){  // Blood Pressure
-        //print("Blood Pressure", 0, 1);
-        //volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
-        //intPrint(((Display*)data)->bloodPressCorrectedBuff[j], 3, 0, 2);         //Systolic: should never be over 3 char
-        //print("/", 3, 2);
-        //intPrint(((Display*)data)->bloodPressCorrectedBuff[j+8], 5, 4, 2);         //Diastolic: should never be over 5 char        
-        //print("mm Hg", 9, 2);
+        print("Blood Pressure", 0, 1);
+        intPrint(bloodPressCorrectedBuff[j], 3, 0, 2);         //Systolic: should never be over 3 char
+        print("/", 3, 2);
+        intPrint(bloodPressCorrectedBuff[j+8], 5, 4, 2);         //Diastolic: should never be over 5 char        
+        print("mm Hg", 9, 2);
       }
       
       if( mode == TEMP){  // temperature
-        //print("Temperature:", 0, 1);
-        //fPrint(((Display*)data)->tempCorrectedBuff[j], 4, 0, 2);               //Temperature: should never be over 4 char
-        //print("C", 4, 2);
+        print("Temperature:", 0, 1);
+        fPrint(tempCorrectedBuff[j], 4, 0, 2);               //Temperature: should never be over 4 char
+        print("C", 4, 2);
       }
       
       if( mode == HR){  // heart rate
-        //print("Heart Rate:", 0, 1);
-        //intPrint(((Display*)data)->pulseRateCorrectedBuff[j], 3, 0, 2);        //Heartrate: should never be over 3 char
-        //print("BPM", 3, 2);
+        print("Heart Rate:", 0, 1);
+        intPrint(pulseRateCorrectedBuff[j], 3, 0, 2);        //Heartrate: should never be over 3 char
+        print("BPM", 3, 2);
       }
     }
     
     if( mode == ANNUNCIATE){  // Annunciate Mode
-      /*print("Annunciate:", 0, 0);
-      volatile int t = *((Display*)data)->bloodPressCorrectedBuff;
-      intPrint(((Display*)data)->bloodPressCorrectedBuff[j], 3, 0, 1);         //Systolic: should never be over 3 char
+      print("Annunciate:", 0, 0);
+      intPrint(bloodPressCorrectedBuff[j], 3, 0, 1);         //Systolic: should never be over 3 char
       print("/", 3, 1);
-      intPrint(((Display*)data)->bloodPressCorrectedBuff[j+8], 5, 4, 1);         //Diastolic: should never be over 5 char
+      intPrint(bloodPressCorrectedBuff[j+8], 5, 4, 1);         //Diastolic: should never be over 5 char
       print("mm Hg", 9, 1);
       
-      fPrint(((Display*)data)->tempCorrectedBuff[j], 4, 0, 2);               //Temperature: should never be over 4 char
+      fPrint(tempCorrectedBuff[j], 4, 0, 2);               //Temperature: should never be over 4 char
       print("C", 4, 2);
-      intPrint(((Display*)data)->pulseRateCorrectedBuff[j], 3, 6, 2);        //Heartrate: should never be over 3 char
+      intPrint(pulseRateCorrectedBuff[j], 3, 6, 2);        //Heartrate: should never be over 3 char
       print("BPM", 9, 2);
       
-      intPrint(*((Display*)data)->batteryState, 3, 13, 2);    //battery: should never be over 3 char
-    */
+      intPrint(batteryState, 3, 13, 2);    //battery: should never be over 3 char
     }
   }
+}
+
+void vMeasure(void *pvParameters){
+  TickType_t xLastWakeTime;
+  const TickType_t xFrequency = 200; //ticks to wait
+  xLastWakeTime = xTaskGetTickCount();
+  
+  for(;;){
+     vTaskDelayUntil( &xLastWakeTime, xFrequency );
+     int ind = i/10;
+     if(i%10 == 0){                                          //temperature
+       if (reverseTemp == FALSE) {    //increasing pattern
+         if (tempRawBuff[j] > 50) {
+           reverseTemp = TRUE;      //reverse pattern
+           if (ind % 2 == 0) {                                   //even tick
+             tempRawBuff[j] -= 2;
+           }
+           else {                                          //odd tick
+             tempRawBuff[j] += 1;
+           }
+         }
+         else {
+           if (ind % 2 == 0) {                                   //even tick
+             tempRawBuff[j] += 2;
+           }
+           else {                                          //odd tick
+             tempRawBuff[j] -= 1;
+           }
+         }
+       }
+       else {                                              //decreasing pattern
+         if (tempRawBuff[j] < 15) {
+           reverseTemp = FALSE;     //reverse pattern
+           if (ind % 2 == 0) {                                   //even tick
+             tempRawBuff[j] += 2;
+           }
+           else {                                          //odd tick
+             tempRawBuff[j] -= 1;
+           }
+         }
+         else {
+           if (ind % 2 == 0) {                                   //even tick
+             tempRawBuff[j] -= 2;
+           }
+           else {                                          //odd tick
+             tempRawBuff[j] += 1;
+           }
+         }
+       }
+     }
+     //systolic/diastolic pressure
+     if (sysComplete == FALSE) {   //run systolic
+       if (bloodPressRawBuff[j] > 100) {      //systolic complete
+         sysComplete = TRUE;      //run diastolic
+         bloodPressRawBuff[j] = 80;          //rest systolic
+         if (ind % 2 == 0) {                                   //even tick
+           bloodPressRawBuff[j+8] += 2;
+         }
+         else {                                          //odd tick
+           bloodPressRawBuff[j+8] -= 1;
+         }
+       }
+       else {
+         if (ind % 2 == 0) {                                   //even tick
+           bloodPressRawBuff[j] += 2;
+         }
+         else {                                          //odd tick
+           bloodPressRawBuff[j] -= 1;
+         }
+       }
+     }
+     else {                                              //run diastolic
+       if (bloodPressRawBuff[j] < 40) {       //diastolic complete
+         sysComplete = FALSE;     //run systolic
+         bloodPressRawBuff[j] = 80;          //reset diastolic
+         if (ind % 2 == 0) {                                   //even tick
+           bloodPressRawBuff[j] += 2;
+         }
+         else {                                          //odd tick
+           bloodPressRawBuff[j] -= 1;
+         }
+       }
+       else {
+         if (ind % 2 == 0) {                                   //even tick
+           bloodPressRawBuff[j+8] += 2;
+         }
+         else {                                          //odd tick
+           bloodPressRawBuff[j+8] -= 1;
+         }
+       }
+     }
+     
+     //heartrate
+     if (reversePulse == FALSE) {   //increasing pattern
+       if (pulseRateRawBuff[j] > 40) {
+         reversePulse = TRUE;     //reverse pattern
+         if (pulseTime % 2 == 0) {                                   //even tick
+           pulseRateRawBuff[j] += 1;
+         }
+         else {                                          //odd tick
+           pulseRateRawBuff[j] -= 3;
+         }
+       }
+       else {
+         if (pulseTime % 2 == 0) {                                   //even tick
+           pulseRateRawBuff[j] -= 1;
+         }
+         else {                                          //odd tick
+           pulseRateRawBuff[j] += 3;
+         }
+       }
+     }
+     else {                                              //decreasing pattern
+       if (pulseRateRawBuff[j] < 15) {
+         reverseTemp = FALSE;     //reverse pattern
+         if (pulseTime % 2 == 0) {                                   //even tick
+           pulseRateRawBuff[j] -= 1;
+         }
+         else {                                          //odd tick
+           pulseRateRawBuff[j] += 3;
+         }
+       }
+       else {
+         if (pulseTime % 2 == 0) {                                   //even tick
+           pulseRateRawBuff[j] += 1;
+         }
+         else {                                          //odd tick
+           pulseRateRawBuff[j] -= 3;
+         }
+       }
+     }
+  }
+}
+
+void vCompute(void *pvParameters){
+  TickType_t xLastWakeTime;
+  const TickType_t xFrequency = 20; //ticks to wait
+  xLastWakeTime = xTaskGetTickCount();
+  
+  for(;;){
+     vTaskDelayUntil( &xLastWakeTime, xFrequency );
+     
+     tempCorrectedBuff[j] = 5 + 0.75*tempRawBuff[j];
+     bloodPressCorrectedBuff[j] = 9 + 2*bloodPressRawBuff[j];
+     bloodPressCorrectedBuff[j+8] = 6 + (int)1.5*bloodPressRawBuff[j+8];
+     pulseRateCorrectedBuff[j] = 8 + 3*pulseRateRawBuff[j];
+  }
+}
+
+void vAnnunciate(void *pvParameters){
+  TickType_t xLastWakeTime;
+  const TickType_t xFrequency = 20; //ticks to wait
+  xLastWakeTime = xTaskGetTickCount();
+  
+  for(;;){
+     vTaskDelayUntil( &xLastWakeTime, xFrequency );
+     
+  }
+}
+
+void vStatus(void *pvParameters){
+  TickType_t xLastWakeTime;
+  const TickType_t xFrequency = 200; //ticks to wait
+  xLastWakeTime = xTaskGetTickCount();
+  
+  for(;;){
+     vTaskDelayUntil( &xLastWakeTime, xFrequency );
+     batteryState--;
+  }
+}
+
+void print(char* c, int hOffset, int vOffset) {                         // string, column, row
+	RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
+}
+
+void intPrint(int c, int size, int hOffset, int vOffset) {              // number, size of number,column, row
+	char dec[2];
+	dec[1] = '\0';
+	int rem = c;
+	for (int i = size - 1; i >= 0; i--) {
+		dec[0] = rem % 10 + '0';
+		rem = rem / 10;
+		RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
+	}
+}
+
+void fPrint(float c, int size, int hOffset, int vOffset) {              // number, size of number,column, row 
+	char dec[2];
+	dec[1] = '\0';
+	int rem = (int)c * 10;
+	for (int i = size - 1; i >= 0; i--) {
+		if (i == size - 2)
+			RIT128x96x4StringDraw(".", hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
+		else {
+			dec[0] = rem % 10 + '0';
+			rem = rem / 10;
+			RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
+		}
+	}
 }
 
 /* Built in Functions */
@@ -738,12 +927,12 @@ void vOLEDTask( void *pvParameters ){
     if( ulY >= ulMaxY ){
       ulY = mainCHARACTER_HEIGHT;
       vOLEDClear();
-      vOLEDStringDraw( pcWelcomeMessage, 0, 0, mainFULL_SCALE );
+      //vOLEDStringDraw( pcWelcomeMessage, 0, 0, mainFULL_SCALE );
     }
     
     /* Display the message along with the maximum jitter time from the
 		high priority time test. */
-    sprintf( cMessage, "%s, xMessage.pcMessage);// [%uns]", xMessage.pcMessage, ulMaxJitter * mainNS_PER_CLOCK );
+    sprintf( cMessage, "%s", xMessage.pcMessage);//[%uns]", xMessage.pcMessage, ulMaxJitter * mainNS_PER_CLOCK );
     vOLEDStringDraw( cMessage, 0, ulY, mainFULL_SCALE );
   }
 }
