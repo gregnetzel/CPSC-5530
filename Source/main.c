@@ -226,8 +226,7 @@ LinkedList* taskQueue;
 TCB* tasks;
 char* comBuffer;
 
-int main(void)
-{
+int main(void){
         SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
                    SYSCTL_XTAL_8MHZ);
         SysTickPeriodSet(SysCtlClockGet());
@@ -774,7 +773,6 @@ void annunciate(void* data) {
       GPIO_PORTF_DATA_R |= 0x01; // Turn on the LED
     }
 }
-
 
 void status(void* data) {
   if(time%100 == 0)

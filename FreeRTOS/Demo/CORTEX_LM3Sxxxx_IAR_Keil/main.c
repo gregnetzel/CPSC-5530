@@ -165,6 +165,8 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include "driverlib/pwm.h"
 #include "inc/hw_gpio.h"
 #include "inc/lm3s8962.h"
+#include  <utils/uartstdio.c>
+//#include "driverlib/gpio.h"
 /*-----------------------------------------------------------*/
 
 /* The time between cycles of the 'check' functionality (defined within the
@@ -294,6 +296,7 @@ volatile unsigned long pulseTime = 0; //pulse transducer time
 int reverseTemp;
 int sysComplete;
 int reversePulse;
+char* comBuffer;
 
 //flags
 volatile int upPressed = 0;
@@ -367,6 +370,7 @@ int main( void ){
   xTaskCreate( vCompute, "COMP", 200, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vAnnunciate, "ANNU", 200, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vStatus, "STAT", 200, NULL, tskIDLE_PRIORITY, NULL);
+  //xTaskCreate( vSerialComms, "COMM", 200, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vOLEDTask, "OLED", mainOLED_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
   
   /* The suicide tasks must be created last as they need to know how many
@@ -388,7 +392,7 @@ int main( void ){
 }
 /*-----------------------------------------------------------*/
 /* New Functions */
-void vDisplayMaker(void *pvParameters){ //print display
+void vDisplayMaker(void *pvParameters){ 
   mode = 0;
   TickType_t xLastWakeTime;
   const TickType_t xFrequency = 200; //ticks to wait
@@ -749,28 +753,28 @@ void vAnnunciate(void *pvParameters){
        for( a = 0; a < 3; a++ ){
          GPIO_PORTF_DATA_R |= 0x01;
          vTaskDelayUntil( &xLastWakeTime, xHRfreq );
-         GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
+         GPIO_PORTF_DATA_R &= ~(0x01);          // Turn off the LED
          vTaskDelayUntil( &xLastWakeTime, xHRfreq );
        }
      }
-     if(t > 37.8 || t < 36.1){//temp
+     if(t > 37.8 || t < 36.1){                  //temp
        for( a = 0; a < 3; a++ ){
          GPIO_PORTF_DATA_R |= 0x01;
          vTaskDelayUntil( &xLastWakeTime, xTempfreq );
-         GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
+         GPIO_PORTF_DATA_R &= ~(0x01);          //Turn off the LED
          vTaskDelayUntil( &xLastWakeTime, xTempfreq );
        }
      }
-     if(s > 120 || s < 90 || d > 80 || d < 60){//bp
-       if(s > 144){
-         PWMGenEnable(PWM_BASE, PWM_GEN_0); 
+     if(s > 120 || s < 90 || d > 80 || d < 60){ //bp
+       if(s > 144){      
+         PWMGenEnable(PWM_BASE, PWM_GEN_0);     //Make sounds
          vTaskDelayUntil( &xLastWakeTime, xBPfreq );
          PWMGenDisable(PWM_BASE, PWM_GEN_0);
        }
        for( a = 0; a < 3; a++ ){
          GPIO_PORTF_DATA_R |= 0x01;
          vTaskDelayUntil( &xLastWakeTime, xBPfreq );
-         GPIO_PORTF_DATA_R &= ~(0x01); // Turn off the LED
+         GPIO_PORTF_DATA_R &= ~(0x01);
          vTaskDelayUntil( &xLastWakeTime, xBPfreq );
        }      
      }
@@ -779,12 +783,31 @@ void vAnnunciate(void *pvParameters){
 
 void vStatus(void *pvParameters){
   TickType_t xLastWakeTime;
-  const TickType_t xFrequency = 2000; //ticks to wait
+  const TickType_t xFrequency = 1500; //ticks to wait
   xLastWakeTime = xTaskGetTickCount();
   
   for(;;){
      vTaskDelayUntil( &xLastWakeTime, xFrequency );
      batteryState--;
+  }
+}
+
+void vSerialComms(void *pvParameters){
+  TickType_t xLastWakeTime;
+  const TickType_t xFrequency = 3000; //ticks to wait
+  xLastWakeTime = xTaskGetTickCount();
+  
+  for(;;){
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    
+    sprintf(comBuffer,"1.Temperature:  %d\n2. Systolic pressure: %dmmHG\n3. Dyastolic pressure: %dmmHG\n4. Pulse rate: %dBPM\n5. Battery: %d",
+            tempCorrectedBuff[0],bloodPressCorrectedBuff[0],bloodPressCorrectedBuff[8],pulseRateCorrectedBuff[0],batteryState);
+    
+    char* buf = &comBuffer[0];
+    while(UARTBusy(UART0_BASE));
+    while(*buf != '\0'){
+      UARTCharPut(UART0_BASE, *buf++);
+    }
   }
 }
 
@@ -851,7 +874,7 @@ void prvSetupHardware( void ){
   IntEnable(INT_GPIOF);
   
   /* setup speaker */
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);    // speaker
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM); 
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
   GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_0);
@@ -861,6 +884,16 @@ void prvSetupHardware( void ){
   PWMGenPeriodSet(PWM_BASE, PWM_GEN_0, ulPeriod);
   PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, ulPeriod / 4);
   PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
+  
+  /* setup serial communication */
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+  //GPIOPinConfigure(GPIO_PA0_U0RX); //uncomment before submit
+  //GPIOPinConfigure(GPIO_PA1_U0TX); //uncomment before submit
+  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);
+  IntEnable(INT_UART0);
+  UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
+  UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200, UART_CONFIG_WLEN_8|UART_CONFIG_PAR_NONE|UART_CONFIG_STOP_ONE);
   
   vParTestInitialise();
 }
