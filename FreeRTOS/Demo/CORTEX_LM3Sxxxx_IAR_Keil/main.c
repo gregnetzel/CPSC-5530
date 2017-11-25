@@ -297,6 +297,10 @@ int reverseTemp;
 int sysComplete;
 int reversePulse;
 char* comBuffer;
+int cuffPressure = 0;
+int cuffHigh = FALSE;
+int cuffSys = FALSE;
+int cuffDia = FALSE;
 
 //flags
 volatile int upPressed = 0;
@@ -330,7 +334,7 @@ void dirPressedHandler(void){//port E pins 0-3 up down left right
 }
 
 //functions
-void vDisplayMaker(void *pvParameters);
+void vDisplay(void *pvParameters);
 void vMeasure(void *pvParameters);
 void vCompute(void *pvParameters);
 void vAnnunciate(void *pvParameters);
@@ -338,6 +342,8 @@ void vStatus(void *pvParameters);
 void print(char* c, int hOffset, int vOffset);
 void intPrint(int c, int size, int hOffset, int vOffset);
 void fPrint(float c, int size, int hOffset, int vOffset);
+void decreaseCuff();
+void increaseCuff();
 /*************************************************************************
  * Please ensure to read http://www.freertos.org/portlm3sx965.html
  * which provides information on configuring and running this demo for the
@@ -365,7 +371,7 @@ int main( void ){
 #endif
   
   
-  xTaskCreate( vDisplayMaker, "DISP", 200, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vDisplay, "DISP", 200, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vMeasure, "MEAS", 200, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vCompute, "COMP", 200, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vAnnunciate, "ANNU", 200, NULL, tskIDLE_PRIORITY, NULL);
@@ -392,7 +398,7 @@ int main( void ){
 }
 /*-----------------------------------------------------------*/
 /* New Functions */
-void vDisplayMaker(void *pvParameters){ 
+void vDisplay(void *pvParameters){ 
   mode = 0;
   TickType_t xLastWakeTime;
   const TickType_t xFrequency = 200; //ticks to wait
@@ -442,8 +448,12 @@ void vDisplayMaker(void *pvParameters){
         case 4:
           mode = 3;
           break;
+        case 7:
+          increaseCuff();
+          break;
         }
         upPressed = 0;
+        /*HR = 6, BP = 7, TEMP = 8*/
       }
       if (downPressed == 1){
         RIT128x96x4Clear();
@@ -459,7 +469,8 @@ void vDisplayMaker(void *pvParameters){
         case 3:
           mode = 4;
           break;
-        case 4:
+        case 7:
+          decreaseCuff();
           break;
         }
         downPressed = 0;
@@ -539,6 +550,8 @@ void vDisplayMaker(void *pvParameters){
         print("/", 3, 2);
         intPrint(bloodPressCorrectedBuff[j+8], 5, 4, 2);         //Diastolic: should never be over 5 char        
         print("mm Hg", 9, 2);
+        print("Cuff Press: ", 0, 3);
+        intPrint(cuffPressure, 4, 0, 4);
       }
       
       if( mode == TEMP){  // temperature
@@ -811,6 +824,20 @@ void vSerialComms(void *pvParameters){
   }
 }
 
+void increaseCuff(){
+  if(cuffPressure >= 100)
+    cuffPressure *= 1.1;
+  else
+    cuffPressure = 100;
+}
+
+void decreaseCuff(){
+  if(cuffPressure >= 100)
+    cuffPressure *= .9;
+  else
+    cuffPressure = 100;
+}
+
 void print(char* c, int hOffset, int vOffset) {                         // string, column, row
 	RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
 }
@@ -886,14 +913,14 @@ void prvSetupHardware( void ){
   PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
   
   /* setup serial communication */
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-  //GPIOPinConfigure(GPIO_PA0_U0RX); //uncomment before submit
-  //GPIOPinConfigure(GPIO_PA1_U0TX); //uncomment before submit
-  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);
-  IntEnable(INT_UART0);
-  UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
-  UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200, UART_CONFIG_WLEN_8|UART_CONFIG_PAR_NONE|UART_CONFIG_STOP_ONE);
+//  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+//  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+//  GPIOPinConfigure(GPIO_PA0_U0RX); //uncomment before submit
+//  GPIOPinConfigure(GPIO_PA1_U0TX); //uncomment before submit
+//  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);
+//  IntEnable(INT_UART0);
+//  UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
+//  UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200, UART_CONFIG_WLEN_8|UART_CONFIG_PAR_NONE|UART_CONFIG_STOP_ONE);
   
   vParTestInitialise();
 }
