@@ -155,6 +155,7 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include "IntQueue.h"
 #include "QueueSet.h"
 #include "EventGroupsDemo.h"
+#include "optfft.c"
 
 /* Health app includes. */
 #include <stdio.h>
@@ -166,6 +167,8 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include "inc/hw_gpio.h"
 #include "inc/lm3s8962.h"
 #include  <utils/uartstdio.c>
+#include <math.h>
+#include <time.h>
 //#include "driverlib/gpio.h"
 /*-----------------------------------------------------------*/
 
@@ -269,7 +272,7 @@ typedef enum displayMode displayMode;
 //Data Variables
 unsigned int tempRawBuff[8];
 unsigned int bloodPressRawBuff[16];	//sys in first half, dia in second.
-unsigned int pulseRateRawBuff[8];
+int pulseRateRawBuff[256];
 
 float tempCorrectedBuff[8];
 unsigned int bloodPressCorrectedBuff[16];//sys in first half, dia in second
@@ -350,12 +353,16 @@ void intPrint(int c, int size, int hOffset, int vOffset);
 void fPrint(float c, int size, int hOffset, int vOffset);
 void decreaseCuff();
 void increaseCuff();
+<<<<<<< HEAD
 void modTemp();
 void modSys();
 void modDia();
 void modHR();
 void fillBuffers();
 
+=======
+void ekgCapture();
+>>>>>>> bb490d3671c0c3e8dc1102792fe513a88c8a710a
 /*************************************************************************
  * Please ensure to read http://www.freertos.org/portlm3sx965.html
  * which provides information on configuring and running this demo for the
@@ -606,6 +613,7 @@ void vMeasure(void *pvParameters){
   
   for(;;){
      vTaskDelayUntil( &xLastWakeTime, xFrequency );
+<<<<<<< HEAD
      modTemp();
      modSys();
      modDia();
@@ -672,7 +680,113 @@ void modHR(){
     pulseRateRawBuff[j] -= 3;
     if(pulseRateRawBuff[j] < 20)
       pulseForward = TRUE;
+=======
+     int ind = i/10;
+     if(i%10 == 0){                                          //temperature
+       if (reverseTemp == FALSE) {    //increasing pattern
+         if (tempRawBuff[j] > 50) {
+           reverseTemp = TRUE;      //reverse pattern
+           if (ind % 2 == 0) {                                   //even tick
+             tempRawBuff[j] -= 2;
+           }
+           else {                                          //odd tick
+             tempRawBuff[j] += 1;
+           }
+         }
+         else {
+           if (ind % 2 == 0) {                                   //even tick
+             tempRawBuff[j] += 2;
+           }
+           else {                                          //odd tick
+             tempRawBuff[j] -= 1;
+           }
+         }
+       }
+       else {                                              //decreasing pattern
+         if (tempRawBuff[j] < 15) {
+           reverseTemp = FALSE;     //reverse pattern
+           if (ind % 2 == 0) {                                   //even tick
+             tempRawBuff[j] += 2;
+           }
+           else {                                          //odd tick
+             tempRawBuff[j] -= 1;
+           }
+         }
+         else {
+           if (ind % 2 == 0) {                                   //even tick
+             tempRawBuff[j] -= 2;
+           }
+           else {                                          //odd tick
+             tempRawBuff[j] += 1;
+           }
+         }
+       }
+     }
+     //systolic/diastolic pressure
+     if (sysComplete == FALSE) {   //run systolic
+       if (bloodPressRawBuff[j] > 100) {      //systolic complete
+         sysComplete = TRUE;      //run diastolic
+         bloodPressRawBuff[j] = 80;          //rest systolic
+         if (ind % 2 == 0) {                                   //even tick
+           bloodPressRawBuff[j+8] += 2;
+         }
+         else {                                          //odd tick
+           bloodPressRawBuff[j+8] -= 1;
+         }
+       }
+       else {
+         if (ind % 2 == 0) {                                   //even tick
+           bloodPressRawBuff[j] += 2;
+         }
+         else {                                          //odd tick
+           bloodPressRawBuff[j] -= 1;
+         }
+       }
+     }
+     else {                                              //run diastolic
+       if (bloodPressRawBuff[j] < 40) {       //diastolic complete
+         sysComplete = FALSE;     //run systolic
+         bloodPressRawBuff[j] = 80;          //reset diastolic
+         if (ind % 2 == 0) {                                   //even tick
+           bloodPressRawBuff[j] += 2;
+         }
+         else {                                          //odd tick
+           bloodPressRawBuff[j] -= 1;
+         }
+       }
+       else {
+         if (ind % 2 == 0) {                                   //even tick
+           bloodPressRawBuff[j+8] += 2;
+         }
+         else {                                          //odd tick
+           bloodPressRawBuff[j+8] -= 1;
+         }
+       }
+     }
+     
+     //heartrate    
+     ekgCapture();
+
   }
+}
+
+void ekgCapture(){
+  double pi = 3.14159265358979323846;
+  double frequency = 40+(time(0)%80); //heart rate ranging from 40-120
+  
+  for(int i= 0; i < 256; i++){
+    double sinVal = 2*pi*frequency*(i/10000);
+    pulseRateRawBuff[i] = 3 * sin(sinVal);
+  }
+}
+
+void ekgProcessing(){
+  int empty[256];
+  for(int i = 0; i < 256; i++){
+    empty[i] = 0;
+>>>>>>> bb490d3671c0c3e8dc1102792fe513a88c8a710a
+  }
+  pulseRateCorrectedBuff[j] = optfft(pulseRateRawBuff, empty);
 }
 
 void vCompute(void *pvParameters){
@@ -686,7 +800,7 @@ void vCompute(void *pvParameters){
      tempCorrectedBuff[j] = 5 + 0.75*tempRawBuff[j];
      bloodPressCorrectedBuff[j] = 9 + 2*bloodPressRawBuff[j];
      bloodPressCorrectedBuff[j+8] = 6 + (int)1.5*bloodPressRawBuff[j+8];
-     pulseRateCorrectedBuff[j] = 8 + 3*pulseRateRawBuff[j];
+     ekgProcessing();
   }
 }
 
