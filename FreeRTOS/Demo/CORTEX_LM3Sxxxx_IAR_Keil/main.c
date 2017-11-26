@@ -155,6 +155,7 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include "IntQueue.h"
 #include "QueueSet.h"
 #include "EventGroupsDemo.h"
+#include "optfft.c"
 
 /* Health app includes. */
 #include <stdio.h>
@@ -166,6 +167,8 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include "inc/hw_gpio.h"
 #include "inc/lm3s8962.h"
 #include  <utils/uartstdio.c>
+#include <math.h>
+#include <time.h>
 //#include "driverlib/gpio.h"
 /*-----------------------------------------------------------*/
 
@@ -269,7 +272,7 @@ typedef enum displayMode displayMode;
 //Data Variables
 unsigned int tempRawBuff[8];
 unsigned int bloodPressRawBuff[16];	//sys in first half, dia in second.
-unsigned int pulseRateRawBuff[8];
+int pulseRateRawBuff[256];
 
 float tempCorrectedBuff[8];
 unsigned int bloodPressCorrectedBuff[16];//sys in first half, dia in second
@@ -344,6 +347,7 @@ void intPrint(int c, int size, int hOffset, int vOffset);
 void fPrint(float c, int size, int hOffset, int vOffset);
 void decreaseCuff();
 void increaseCuff();
+void ekgCapture();
 /*************************************************************************
  * Please ensure to read http://www.freertos.org/portlm3sx965.html
  * which provides information on configuring and running this demo for the
@@ -674,46 +678,28 @@ void vMeasure(void *pvParameters){
        }
      }
      
-     //heartrate
-     if (reversePulse == FALSE) {   //increasing pattern
-       if (pulseRateRawBuff[j] > 40) {
-         reversePulse = TRUE;     //reverse pattern
-         if (pulseTime % 2 == 0) {                                   //even tick
-           pulseRateRawBuff[j] += 1;
-         }
-         else {                                          //odd tick
-           pulseRateRawBuff[j] -= 3;
-         }
-       }
-       else {
-         if (pulseTime % 2 == 0) {                                   //even tick
-           pulseRateRawBuff[j] -= 1;
-         }
-         else {                                          //odd tick
-           pulseRateRawBuff[j] += 3;
-         }
-       }
-     }
-     else {                                              //decreasing pattern
-       if (pulseRateRawBuff[j] < 15) {
-         reverseTemp = FALSE;     //reverse pattern
-         if (pulseTime % 2 == 0) {                                   //even tick
-           pulseRateRawBuff[j] -= 1;
-         }
-         else {                                          //odd tick
-           pulseRateRawBuff[j] += 3;
-         }
-       }
-       else {
-         if (pulseTime % 2 == 0) {                                   //even tick
-           pulseRateRawBuff[j] += 1;
-         }
-         else {                                          //odd tick
-           pulseRateRawBuff[j] -= 3;
-         }
-       }
-     }
+     //heartrate    
+     ekgCapture();
+
   }
+}
+
+void ekgCapture(){
+  double pi = 3.14159265358979323846;
+  double frequency = 40+(time(0)%80); //heart rate ranging from 40-120
+  
+  for(int i= 0; i < 256; i++){
+    double sinVal = 2*pi*frequency*(i/10000);
+    pulseRateRawBuff[i] = 3 * sin(sinVal);
+  }
+}
+
+void ekgProcessing(){
+  int empty[256];
+  for(int i = 0; i < 256; i++){
+    empty[i] = 0;
+  }
+  pulseRateCorrectedBuff[j] = optfft(pulseRateRawBuff, empty);
 }
 
 void vCompute(void *pvParameters){
@@ -727,7 +713,7 @@ void vCompute(void *pvParameters){
      tempCorrectedBuff[j] = 5 + 0.75*tempRawBuff[j];
      bloodPressCorrectedBuff[j] = 9 + 2*bloodPressRawBuff[j];
      bloodPressCorrectedBuff[j+8] = 6 + (int)1.5*bloodPressRawBuff[j+8];
-     pulseRateCorrectedBuff[j] = 8 + 3*pulseRateRawBuff[j];
+     ekgProcessing();
   }
 }
 
