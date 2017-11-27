@@ -246,7 +246,7 @@ static unsigned short generate_io_state( void *arg )
 	sprintf( uip_appdata,
 		"<input type=\"checkbox\" name=\"LED0\" value=\"1\" %s>LED"\
 		"<p>"\
-		"<input type=\"text\" name=\"LCD\" value=\"Enter LCD text\" size=\"16\">",
+		"<input type=\"text\" name=\"LCD\" value=\"\" size=\"16\">",
 		pcStatus );
 
 	return strlen( uip_appdata );

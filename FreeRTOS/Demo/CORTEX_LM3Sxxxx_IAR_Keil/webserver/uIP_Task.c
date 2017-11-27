@@ -101,10 +101,10 @@ struct timer {
 /*-----------------------------------------------------------*/
 
 /* IP address configuration. */
-#define uipIP_ADDR0		172
-#define uipIP_ADDR1		25
-#define uipIP_ADDR2		218
-#define uipIP_ADDR3		19	
+#define uipIP_ADDR0		169
+#define uipIP_ADDR1		254
+#define uipIP_ADDR2		12
+#define uipIP_ADDR3		250	
 
 /* How long to wait before attempting to connect the MAC again. */
 #define uipINIT_WAIT    100
