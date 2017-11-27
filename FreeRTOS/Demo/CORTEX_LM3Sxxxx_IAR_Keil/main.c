@@ -318,6 +318,7 @@ volatile int leftPressed = 0;
 volatile int selectPressed = 0;
 //volatile int addFlags[] = {0,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
 volatile int measureDelete = 0;
+volatile char externalCommand = '\0';
 
 //interrupts
 void selectPressedHandler(void){//port F pin 1
@@ -358,7 +359,6 @@ void modSys();
 void modDia();
 void modHR();
 void fillBuffers();
-
 void ekgCapture();
 /*************************************************************************
  * Please ensure to read http://www.freertos.org/portlm3sx965.html
@@ -388,8 +388,8 @@ int main( void ){
   
   
   xTaskCreate( vDisplay, "DISP", 200, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vMeasure, "MEAS", 200, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vCompute, "COMP", 200, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vMeasure, "MEAS", 2000, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vCompute, "COMP", 2000, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vAnnunciate, "ANNU", 200, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vStatus, "STAT", 200, NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate( vSerialComms, "COMM", 200, NULL, tskIDLE_PRIORITY, NULL);
@@ -613,7 +613,7 @@ void vMeasure(void *pvParameters){
      modTemp();
      modSys();
      modDia();
-     modHR();
+     ekgCapture();
      vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
@@ -666,7 +666,7 @@ void modDia(){
   }
 }
 
-void modHR(){
+/*void modHR(){
   if(pulseForward){
     pulseRateRawBuff[j] += 3;
     if(pulseRateRawBuff[j] > 40)
@@ -676,18 +676,18 @@ void modHR(){
     pulseRateRawBuff[j] -= 3;
     if(pulseRateRawBuff[j] < 20)
       pulseForward = TRUE;
-    ekgCapture();
+    
   }
-}
-
+}*/
 
 void ekgCapture(){
   double pi = 3.14159265358979323846;
   double frequency = 40+(time(0)%80); //heart rate ranging from 40-120
-  
+  double omega = 2*pi*frequency;
+  float t = 0;
   for(int i= 0; i < 256; i++){
-    double sinVal = 2*pi*frequency*(i/10000);
-    pulseRateRawBuff[i] = 3 * sin(sinVal);
+    pulseRateRawBuff[i] = (int)(3 * sin(omega*t));
+    t += 0.000125;
   }
 }
 
@@ -840,33 +840,33 @@ void decreaseCuff(){
 }
 
 void print(char* c, int hOffset, int vOffset) {                         // string, column, row
-	RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
+  RIT128x96x4StringDraw(c, hSpacing*(hOffset), vSpacing*(vOffset), 15);
 }
 
 void intPrint(int c, int size, int hOffset, int vOffset) {              // number, size of number,column, row
-	char dec[2];
-	dec[1] = '\0';
-	int rem = c;
-	for (int i = size - 1; i >= 0; i--) {
-		dec[0] = rem % 10 + '0';
-		rem = rem / 10;
-		RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
-	}
+  char dec[2];
+  dec[1] = '\0';
+  int rem = c;
+  for (int i = size - 1; i >= 0; i--) {
+    dec[0] = rem % 10 + '0';
+    rem = rem / 10;
+    RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
+  }
 }
 
 void fPrint(float c, int size, int hOffset, int vOffset) {              // number, size of number,column, row 
-	char dec[2];
-	dec[1] = '\0';
-	int rem = (int)c * 10;
-	for (int i = size - 1; i >= 0; i--) {
-		if (i == size - 2)
-			RIT128x96x4StringDraw(".", hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
-		else {
-			dec[0] = rem % 10 + '0';
-			rem = rem / 10;
-			RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
-		}
-	}
+  char dec[2];
+  dec[1] = '\0';
+  int rem = (int)c * 10;
+  for (int i = size - 1; i >= 0; i--) {
+    if (i == size - 2)
+      RIT128x96x4StringDraw(".", hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
+    else {
+      dec[0] = rem % 10 + '0';
+      rem = rem / 10;
+      RIT128x96x4StringDraw(dec, hSpacing*(hOffset + i), vSpacing*(vOffset), 15);
+    }
+  }
 }
 
 /* Built in Functions */
