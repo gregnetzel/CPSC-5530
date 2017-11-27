@@ -155,6 +155,7 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include "IntQueue.h"
 #include "QueueSet.h"
 #include "EventGroupsDemo.h"
+#include "optfft.c"
 
 /* Health app includes. */
 #include <stdio.h>
@@ -166,6 +167,8 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include "inc/hw_gpio.h"
 #include "inc/lm3s8962.h"
 #include  <utils/uartstdio.c>
+#include <math.h>
+#include <time.h>
 //#include "driverlib/gpio.h"
 /*-----------------------------------------------------------*/
 
@@ -269,7 +272,7 @@ typedef enum displayMode displayMode;
 //Data Variables
 unsigned int tempRawBuff[8];
 unsigned int bloodPressRawBuff[16];	//sys in first half, dia in second.
-unsigned int pulseRateRawBuff[8];
+int pulseRateRawBuff[256];
 
 float tempCorrectedBuff[8];
 unsigned int bloodPressCorrectedBuff[16];//sys in first half, dia in second
@@ -301,6 +304,12 @@ int cuffPressure = 0;
 int cuffHigh = FALSE;
 int cuffSys = FALSE;
 int cuffDia = FALSE;
+int lastSysPress = 0;
+int lastDiaPress = 0;
+int sysForward = TRUE;
+int diaForward = TRUE;
+int tempForward = TRUE;
+int pulseForward = TRUE;
 
 //flags
 volatile int upPressed = 0;
@@ -344,6 +353,13 @@ void intPrint(int c, int size, int hOffset, int vOffset);
 void fPrint(float c, int size, int hOffset, int vOffset);
 void decreaseCuff();
 void increaseCuff();
+void modTemp();
+void modSys();
+void modDia();
+void modHR();
+void fillBuffers();
+
+void ekgCapture();
 /*************************************************************************
  * Please ensure to read http://www.freertos.org/portlm3sx965.html
  * which provides information on configuring and running this demo for the
@@ -546,9 +562,11 @@ void vDisplay(void *pvParameters){
       print("Menu", 0, 0);
       if( mode == BP){  // Blood Pressure
         print("Blood Pressure", 0, 1);
-        intPrint(bloodPressCorrectedBuff[j], 3, 0, 2);         //Systolic: should never be over 3 char
+        //intPrint(bloodPressCorrectedBuff[j], 3, 0, 2);         //Systolic: should never be over 3 char
+        intPrint(lastSysPress, 3, 0, 2);        
         print("/", 3, 2);
-        intPrint(bloodPressCorrectedBuff[j+8], 5, 4, 2);         //Diastolic: should never be over 5 char        
+        //intPrint(bloodPressCorrectedBuff[j+8], 5, 4, 2);         //Diastolic: should never be over 5 char     
+        intPrint(lastDiaPress, 5, 4, 2); 
         print("mm Hg", 9, 2);
         print("Cuff Press: ", 0, 3);
         intPrint(cuffPressure, 4, 0, 4);
@@ -588,132 +606,97 @@ void vMeasure(void *pvParameters){
   TickType_t xLastWakeTime;
   const TickType_t xFrequency = 2000; //ticks to wait
   xLastWakeTime = xTaskGetTickCount();
+  fillBuffers();
   
   for(;;){
      vTaskDelayUntil( &xLastWakeTime, xFrequency );
-     int ind = i/10;
-     if(i%10 == 0){                                          //temperature
-       if (reverseTemp == FALSE) {    //increasing pattern
-         if (tempRawBuff[j] > 50) {
-           reverseTemp = TRUE;      //reverse pattern
-           if (ind % 2 == 0) {                                   //even tick
-             tempRawBuff[j] -= 2;
-           }
-           else {                                          //odd tick
-             tempRawBuff[j] += 1;
-           }
-         }
-         else {
-           if (ind % 2 == 0) {                                   //even tick
-             tempRawBuff[j] += 2;
-           }
-           else {                                          //odd tick
-             tempRawBuff[j] -= 1;
-           }
-         }
-       }
-       else {                                              //decreasing pattern
-         if (tempRawBuff[j] < 15) {
-           reverseTemp = FALSE;     //reverse pattern
-           if (ind % 2 == 0) {                                   //even tick
-             tempRawBuff[j] += 2;
-           }
-           else {                                          //odd tick
-             tempRawBuff[j] -= 1;
-           }
-         }
-         else {
-           if (ind % 2 == 0) {                                   //even tick
-             tempRawBuff[j] -= 2;
-           }
-           else {                                          //odd tick
-             tempRawBuff[j] += 1;
-           }
-         }
-       }
-     }
-     //systolic/diastolic pressure
-     if (sysComplete == FALSE) {   //run systolic
-       if (bloodPressRawBuff[j] > 100) {      //systolic complete
-         sysComplete = TRUE;      //run diastolic
-         bloodPressRawBuff[j] = 80;          //rest systolic
-         if (ind % 2 == 0) {                                   //even tick
-           bloodPressRawBuff[j+8] += 2;
-         }
-         else {                                          //odd tick
-           bloodPressRawBuff[j+8] -= 1;
-         }
-       }
-       else {
-         if (ind % 2 == 0) {                                   //even tick
-           bloodPressRawBuff[j] += 2;
-         }
-         else {                                          //odd tick
-           bloodPressRawBuff[j] -= 1;
-         }
-       }
-     }
-     else {                                              //run diastolic
-       if (bloodPressRawBuff[j] < 40) {       //diastolic complete
-         sysComplete = FALSE;     //run systolic
-         bloodPressRawBuff[j] = 80;          //reset diastolic
-         if (ind % 2 == 0) {                                   //even tick
-           bloodPressRawBuff[j] += 2;
-         }
-         else {                                          //odd tick
-           bloodPressRawBuff[j] -= 1;
-         }
-       }
-       else {
-         if (ind % 2 == 0) {                                   //even tick
-           bloodPressRawBuff[j+8] += 2;
-         }
-         else {                                          //odd tick
-           bloodPressRawBuff[j+8] -= 1;
-         }
-       }
-     }
-     
-     //heartrate
-     if (reversePulse == FALSE) {   //increasing pattern
-       if (pulseRateRawBuff[j] > 40) {
-         reversePulse = TRUE;     //reverse pattern
-         if (pulseTime % 2 == 0) {                                   //even tick
-           pulseRateRawBuff[j] += 1;
-         }
-         else {                                          //odd tick
-           pulseRateRawBuff[j] -= 3;
-         }
-       }
-       else {
-         if (pulseTime % 2 == 0) {                                   //even tick
-           pulseRateRawBuff[j] -= 1;
-         }
-         else {                                          //odd tick
-           pulseRateRawBuff[j] += 3;
-         }
-       }
-     }
-     else {                                              //decreasing pattern
-       if (pulseRateRawBuff[j] < 15) {
-         reverseTemp = FALSE;     //reverse pattern
-         if (pulseTime % 2 == 0) {                                   //even tick
-           pulseRateRawBuff[j] -= 1;
-         }
-         else {                                          //odd tick
-           pulseRateRawBuff[j] += 3;
-         }
-       }
-       else {
-         if (pulseTime % 2 == 0) {                                   //even tick
-           pulseRateRawBuff[j] += 1;
-         }
-         else {                                          //odd tick
-           pulseRateRawBuff[j] -= 3;
-         }
-       }
-     }
+     modTemp();
+     modSys();
+     modDia();
+     modHR();
+     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
+}
+
+void fillBuffers() {
+  for(int i = 0; i < 8; i++) {
+    tempRawBuff[i] = 75;
+    bloodPressRawBuff[i] = 80;
+    bloodPressRawBuff[i+8] = 80;
+    pulseRateRawBuff[i] = 0;
+  }
+}
+
+void modTemp(){
+  if(tempForward){
+    tempRawBuff[j] += 2;
+    if(tempRawBuff[j] > 50)
+      tempForward = FALSE;
+  }
+  else{
+    tempRawBuff[j] -= 2;
+    if(tempRawBuff[j] < 15)
+      tempForward = TRUE;
+  }
+}
+
+void modSys(){
+  if(sysForward){
+    bloodPressRawBuff[j] += 2;
+    if(bloodPressRawBuff[j] > 150)
+      sysForward = FALSE;
+  }
+  else{
+    bloodPressRawBuff[j] -= 2;
+    if(bloodPressRawBuff[j] < 50)
+      sysForward = TRUE;
+  }
+}
+
+void modDia(){
+  if(diaForward){
+    bloodPressRawBuff[j+8] += 2;
+    if(bloodPressRawBuff[j+8] > 150)
+      sysForward = FALSE;
+  }
+  else{
+    bloodPressRawBuff[j+8] -= 2;
+    if(bloodPressRawBuff[j+8] < 50)
+      diaForward = TRUE;
+  }
+}
+
+void modHR(){
+  if(pulseForward){
+    pulseRateRawBuff[j] += 3;
+    if(pulseRateRawBuff[j] > 40)
+      pulseForward = FALSE;
+  }
+  else{
+    pulseRateRawBuff[j] -= 3;
+    if(pulseRateRawBuff[j] < 20)
+      pulseForward = TRUE;
+    ekgCapture();
+  }
+}
+
+
+void ekgCapture(){
+  double pi = 3.14159265358979323846;
+  double frequency = 40+(time(0)%80); //heart rate ranging from 40-120
+  
+  for(int i= 0; i < 256; i++){
+    double sinVal = 2*pi*frequency*(i/10000);
+    pulseRateRawBuff[i] = 3 * sin(sinVal);
+  }
+}
+
+void ekgProcessing(){
+  int empty[256];
+  for(int i = 0; i < 256; i++){
+    empty[i] = 0;
+  }
+  pulseRateCorrectedBuff[j] = optfft(pulseRateRawBuff, empty);
 }
 
 void vCompute(void *pvParameters){
@@ -727,7 +710,7 @@ void vCompute(void *pvParameters){
      tempCorrectedBuff[j] = 5 + 0.75*tempRawBuff[j];
      bloodPressCorrectedBuff[j] = 9 + 2*bloodPressRawBuff[j];
      bloodPressCorrectedBuff[j+8] = 6 + (int)1.5*bloodPressRawBuff[j+8];
-     pulseRateCorrectedBuff[j] = 8 + 3*pulseRateRawBuff[j];
+     ekgProcessing();
   }
 }
 
@@ -825,17 +808,35 @@ void vSerialComms(void *pvParameters){
 }
 
 void increaseCuff(){
-  if(cuffPressure >= 100)
+  if(cuffPressure >= 10){
     cuffPressure *= 1.1;
+    if(cuffPressure > bloodPressCorrectedBuff[j+8] && cuffPressure > bloodPressCorrectedBuff[j] && cuffHigh == FALSE){
+      cuffHigh = TRUE;
+    }
+  }
   else
-    cuffPressure = 100;
+    cuffPressure = 10;
 }
 
 void decreaseCuff(){
-  if(cuffPressure >= 100)
+  if(cuffPressure >= 10){
     cuffPressure *= .9;
+    if(cuffPressure < bloodPressCorrectedBuff[j] && cuffHigh == TRUE && cuffSys == FALSE){
+      cuffSys = TRUE;
+      lastSysPress = bloodPressCorrectedBuff[j];
+    }
+    else if(cuffPressure < bloodPressCorrectedBuff[j+8] && cuffHigh == TRUE && cuffDia == FALSE){
+      cuffDia = TRUE;
+      lastDiaPress = bloodPressCorrectedBuff[j+8];
+    }
+    if(cuffHigh && cuffSys && cuffDia){
+      cuffHigh = FALSE;
+      cuffSys = FALSE;
+      cuffDia = FALSE;
+    }
+  }
   else
-    cuffPressure = 100;
+    cuffPressure = 10;
 }
 
 void print(char* c, int hOffset, int vOffset) {                         // string, column, row
@@ -913,10 +914,10 @@ void prvSetupHardware( void ){
   PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
   
   /* setup serial communication */
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+//  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);                        //uncomment before submit
 //  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-//  GPIOPinConfigure(GPIO_PA0_U0RX); //uncomment before submit
-//  GPIOPinConfigure(GPIO_PA1_U0TX); //uncomment before submit
+//  GPIOPinConfigure(GPIO_PA0_U0RX);
+//  GPIOPinConfigure(GPIO_PA1_U0TX); 
 //  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);
 //  IntEnable(INT_UART0);
 //  UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
