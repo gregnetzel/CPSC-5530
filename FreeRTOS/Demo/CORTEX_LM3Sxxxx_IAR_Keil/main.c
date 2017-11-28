@@ -319,7 +319,7 @@ volatile int leftPressed = 0;
 volatile int selectPressed = 0;
 //volatile int addFlags[] = {0,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
 volatile int measureDelete = 0;
-volatile char externalCommand = '\0';
+char externalCommand = '\0';
 
 //interrupts
 void selectPressedHandler(void){//port F pin 1

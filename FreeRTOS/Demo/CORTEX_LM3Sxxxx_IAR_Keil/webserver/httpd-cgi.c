@@ -50,7 +50,7 @@
 #include "httpd.h"
 #include "httpd-cgi.h"
 #include "httpd-fs.h"
-#include "../variables.h"
+#include "variables.h"
 
 #include <stdio.h>
 #include <string.h>
