@@ -166,9 +166,10 @@ and the TCP/IP stack together cannot be accommodated with the 32K size limit. */
 #include "driverlib/pwm.h"
 #include "inc/hw_gpio.h"
 #include "inc/lm3s8962.h"
-#include  <utils/uartstdio.c>
+#include <utils/uartstdio.c>
 #include <math.h>
 #include <time.h>
+#include "variables.h"
 //#include "driverlib/gpio.h"
 /*-----------------------------------------------------------*/
 
@@ -177,7 +178,7 @@ tick hook. */
 #define mainCHECK_DELAY		( ( TickType_t ) 5000 / portTICK_PERIOD_MS )
 
 /* Size of the stack allocated to the uIP task. */
-#define mainBASIC_WEB_STACK_SIZE        ( configMINIMAL_STACK_SIZE * 3 )
+#define mainBASIC_WEB_STACK_SIZE        ( 1000 )
 
 /* The OLED task uses the sprintf function so requires a little more stack too. */
 #define mainOLED_TASK_STACK_SIZE	( configMINIMAL_STACK_SIZE + 50 )
@@ -387,11 +388,11 @@ int main( void ){
 #endif
   
   
-  xTaskCreate( vDisplay, "DISP", 200, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vMeasure, "MEAS", 200, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vCompute, "COMP", 200, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vAnnunciate, "ANNU", 200, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vStatus, "STAT", 200, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vDisplay, "DISP", 100, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vMeasure, "MEAS", 100, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vCompute, "COMP", 1000, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vAnnunciate, "ANNU", 100, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate( vStatus, "STAT", 100, NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate( vSerialComms, "COMM", 200, NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate( vOLEDTask, "OLED", mainOLED_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
   

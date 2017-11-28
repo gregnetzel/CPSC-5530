@@ -303,6 +303,7 @@ struct uip_eth_addr xAddr;
 
 void vApplicationProcessFormInput( char *pcInputString, portBASE_TYPE xInputLength )
 {
+//change here for Command task.
 char *c, *pcText;
 static char cMessageForDisplay[ 32 ];
 extern QueueHandle_t xOLEDQueue;

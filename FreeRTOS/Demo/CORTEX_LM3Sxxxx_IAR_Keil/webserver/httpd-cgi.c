@@ -50,6 +50,7 @@
 #include "httpd.h"
 #include "httpd-cgi.h"
 #include "httpd-fs.h"
+#include "../variables.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -212,7 +213,10 @@ generate_rtos_stats(void *arg)
 {
 	lRefreshCount++;
 	sprintf( cCountBuf, "<p><br>Refresh count = %d", lRefreshCount );
-    vTaskList( ( char * ) uip_appdata );
+        sprintf((char*)uip_appdata, "<p><ul><li>Temp: = %d</li><li>Sys: = %i</li><li>Dys: = %i</li><li>BP: %i</li><li>Battery: %d</li></ul></p>", tempCorrectedBuff[0], 
+                  bloodPressCorrectedBuff[0], bloodPressCorrectedBuff[8], pulseRateCorrectedBuff[0],
+                  batteryState);
+        //vTaskList( ( char * ) uip_appdata );
 	strcat( uip_appdata, cCountBuf );
 
 	return strlen( uip_appdata );
