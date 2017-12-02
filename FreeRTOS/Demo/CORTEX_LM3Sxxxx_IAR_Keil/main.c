@@ -317,9 +317,9 @@ volatile int upPressed = 0;
 volatile int downPressed = 0;
 volatile int leftPressed = 0;
 volatile int selectPressed = 0;
-//volatile int addFlags[] = {0,0,0,0,0,0,0,0}; //what schedule needs to add, same order as tasks array
 volatile int measureDelete = 0;
 char externalCommand = '\0';
+TaskHandle_t xHandles[7];
 
 //interrupts
 void selectPressedHandler(void){//port F pin 1
@@ -345,6 +345,7 @@ void dirPressedHandler(void){//port E pins 0-3 up down left right
 }
 
 //functions
+void vControl(void *pvParameters);
 void vDisplay(void *pvParameters);
 void vMeasure(void *pvParameters);
 void vCompute(void *pvParameters);
@@ -387,13 +388,13 @@ int main( void ){
   }
 #endif
   
-  xTaskCreate( vDisplay, "DISP", 100, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vMeasure, "MEAS", 100, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vCompute, "COMP", 1000, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vAnnunciate, "ANNU", 100, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vStatus, "STAT", 100, NULL, tskIDLE_PRIORITY, NULL);
-  //xTaskCreate( vSerialComms, "COMM", 200, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate( vOLEDTask, "OLED", mainOLED_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( vDisplay, "DISP", 100, NULL, tskIDLE_PRIORITY, xHandles[0]);
+  xTaskCreate( vMeasure, "MEAS", 100, NULL, tskIDLE_PRIORITY, xHandles[1]);
+  xTaskCreate( vCompute, "COMP", 1000, NULL, tskIDLE_PRIORITY, xHandles[2]);
+  xTaskCreate( vAnnunciate, "ANNU", 100, NULL, tskIDLE_PRIORITY, xHandles[3]);
+  xTaskCreate( vStatus, "STAT", 100, NULL, tskIDLE_PRIORITY, xHandles[4]);
+  xTaskCreate( vSerialComms, "COMM", 200, NULL, tskIDLE_PRIORITY, xHandles[5]);
+  xTaskCreate( vOLEDTask, "OLED", mainOLED_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY, xHandles[6] );
   
   /* The suicide tasks must be created last as they need to know how many
 	tasks were running prior to their creation in order to ascertain whether
@@ -414,7 +415,46 @@ int main( void ){
 }
 /*-----------------------------------------------------------*/
 /* New Functions */
+void vControl(void *pvParameters){
+  TickType_t xLastWakeTime;
+  const TickType_t xFrequency = 200; //ticks to wait
+  xLastWakeTime = xTaskGetTickCount();
+  TaskStatus_t xTaskDetails;    //to hold display status info
+  for(;;){
+     vTaskDelayUntil( &xLastWakeTime, xFrequency );
+     switch (externalCommand){
+     case 'I':
+       vTaskResume(xHandles[6]);
+       break;
+     case 'S':
+       vTaskResume(xHandles[1]);
+       vTaskResume(xHandles[2]);
+       break;
+     case 'P':
+       vTaskSuspend(xHandles[1]);
+       vTaskSuspend(xHandles[2]);
+       break;
+     case 'D':
+       vTaskGetInfo( xHandles[0], &xTaskDetails, pdTRUE, eInvalid );
+       if (xTaskDetails.eCurrentState == 3)
+         vTaskResume(xHandles[0]);    
+       else
+         vTaskSuspend(xHandles[0]);
+       break;
+     case 'M':
+       vTaskResume(xHandles[4]);
+       vTaskResume(xHandles[3]);
+       break;
+     case 'W':
+       vTaskResume(xHandles[5]);
+       break;
+     }
+     externalCommand = '\0';
+  }
+}
+
 void vDisplay(void *pvParameters){ 
+  vTaskSuspend(NULL);
   mode = 0;
   TickType_t xLastWakeTime;
   const TickType_t xFrequency = 200; //ticks to wait
@@ -469,7 +509,6 @@ void vDisplay(void *pvParameters){
           break;
         }
         upPressed = 0;
-        /*HR = 6, BP = 7, TEMP = 8*/
       }
       if (downPressed == 1){
         RIT128x96x4Clear();
@@ -562,10 +601,8 @@ void vDisplay(void *pvParameters){
       print("Menu", 0, 0);
       if( mode == BP){  // Blood Pressure
         print("Blood Pressure", 0, 1);
-        //intPrint(bloodPressCorrectedBuff[j], 3, 0, 2);         //Systolic: should never be over 3 char
         intPrint(lastSysPress, 3, 0, 2);        
         print("/", 3, 2);
-        //intPrint(bloodPressCorrectedBuff[j+8], 5, 4, 2);         //Diastolic: should never be over 5 char     
         intPrint(lastDiaPress, 5, 4, 2); 
         print("mm Hg", 9, 2);
         print("Cuff Press: ", 0, 3);
@@ -603,6 +640,7 @@ void vDisplay(void *pvParameters){
 }
 
 void vMeasure(void *pvParameters){
+  vTaskSuspend(NULL);
   TickType_t xLastWakeTime;
   const TickType_t xFrequency = 2000; //ticks to wait
   xLastWakeTime = xTaskGetTickCount();
@@ -666,27 +704,13 @@ void modDia(){
   }
 }
 
-/*void modHR(){
-  if(pulseForward){
-    pulseRateRawBuff[j] += 3;
-    if(pulseRateRawBuff[j] > 40)
-      pulseForward = FALSE;
-  }
-  else{
-    pulseRateRawBuff[j] -= 3;
-    if(pulseRateRawBuff[j] < 20)
-      pulseForward = TRUE;
-    
-  }
-}*/
-
 void ekgCapture(){
   double pi = 3.14159265358979323846;
   double frequency = 40+(time(0)%80); //heart rate ranging from 40-120
   double omega = 2*pi*frequency;
   float t = 0;
   for(int i= 0; i < 256; i++){
-    pulseRateRawBuff[i] = (int)(3 * sin(omega*t));
+    pulseRateRawBuff[i] = (int)(30 * sin(omega*t));
     t += 0.000125;
   }
 }
@@ -700,6 +724,7 @@ void ekgProcessing(){
 }
 
 void vCompute(void *pvParameters){
+  vTaskSuspend(NULL);
   TickType_t xLastWakeTime;
   const TickType_t xFrequency = 20; //ticks to wait
   xLastWakeTime = xTaskGetTickCount();
@@ -715,6 +740,7 @@ void vCompute(void *pvParameters){
 }
 
 void vAnnunciate(void *pvParameters){
+  vTaskSuspend(NULL);
   TickType_t xLastWakeTime;
   const TickType_t xFrequency = 20;
   const TickType_t xBPfreq = 200;
@@ -778,6 +804,7 @@ void vAnnunciate(void *pvParameters){
 }
 
 void vStatus(void *pvParameters){
+  vTaskSuspend(NULL);
   TickType_t xLastWakeTime;
   const TickType_t xFrequency = 1500; //ticks to wait
   xLastWakeTime = xTaskGetTickCount();
@@ -789,6 +816,7 @@ void vStatus(void *pvParameters){
 }
 
 void vSerialComms(void *pvParameters){
+  vTaskSuspend(NULL);
   TickType_t xLastWakeTime;
   const TickType_t xFrequency = 3000; //ticks to wait
   xLastWakeTime = xTaskGetTickCount();
@@ -914,85 +942,26 @@ void prvSetupHardware( void ){
   PWMPulseWidthSet(PWM_BASE, PWM_OUT_1, ulPeriod * 3 / 4);
   
   /* setup serial communication */
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);                        //uncomment before submit
-//  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-//  GPIOPinConfigure(GPIO_PA0_U0RX);
-//  GPIOPinConfigure(GPIO_PA1_U0TX); 
-//  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);
-//  IntEnable(INT_UART0);
-//  UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
-//  UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200, UART_CONFIG_WLEN_8|UART_CONFIG_PAR_NONE|UART_CONFIG_STOP_ONE);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);                       
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+  GPIOPinConfigure(GPIO_PA0_U0RX);
+  GPIOPinConfigure(GPIO_PA1_U0TX); 
+  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);
+  IntEnable(INT_UART0);
+  UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
+  UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200, UART_CONFIG_WLEN_8|UART_CONFIG_PAR_NONE|UART_CONFIG_STOP_ONE);
   
   vParTestInitialise();
 }
 /*-----------------------------------------------------------*/
 
 void vApplicationTickHook( void ){
-//  static xOLEDMessage xMessage = { "PASS" };
-//  static unsigned long ulTicksSinceLastDisplay = 0;
-//  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-//  
-//  /* Called from every tick interrupt.  Have enough ticks passed to make it
-//	time to perform our health status check again? */
-//  ulTicksSinceLastDisplay++;
-//  if( ulTicksSinceLastDisplay >= mainCHECK_DELAY ){
-//    ulTicksSinceLastDisplay = 0;
-//    
-//    /* Has an error been found in any task? */
-//    if( xAreGenericQueueTasksStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN GEN Q";
-//    }
-//    else if( xIsCreateTaskStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN CREATE";
-//    }
-//    else if( xAreIntegerMathsTaskStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN MATH";
-//    }
-//    else if( xAreIntQueueTasksStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN INT QUEUE";
-//    }
-//    else if( xAreBlockingQueuesStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN BLOCK Q";
-//    }
-//    else if( xAreBlockTimeTestTasksStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN BLOCK TIME";
-//    }
-//    else if( xAreSemaphoreTasksStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN SEMAPHORE";
-//    }
-//    else if( xArePollingQueuesStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN POLL Q";
-//    }
-//    else if( xAreQueuePeekTasksStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN PEEK Q";
-//    }
-//    else if( xAreRecursiveMutexTasksStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN REC MUTEX";
-//    }
-//    else if( xAreQueueSetTasksStillRunning() != pdPASS ){
-//      xMessage.pcMessage = "ERROR IN Q SET";
-//    }
-//    else if( xAreEventGroupTasksStillRunning() != pdTRUE ){
-//      xMessage.pcMessage = "ERROR IN EVNT GRP";
-//    }
-//    
-//    configASSERT( strcmp( ( const char * ) xMessage.pcMessage, "PASS" ) == 0 );
-//    
-//    /* Send the message to the OLED gatekeeper for display. */
-//    xHigherPriorityTaskWoken = pdFALSE;
-//    xQueueSendFromISR( xOLEDQueue, &xMessage, &xHigherPriorityTaskWoken );
-//  }
-//  
-//  /* Write to a queue that is in use as part of the queue set demo to
-//	demonstrate using queue sets from an ISR. */
-//  vQueueSetAccessQueueSetFromISR();
-//  
-//  /* Call the event group ISR tests. */
-//  vPeriodicEventGroupsProcessing();
+
 }
 /*-----------------------------------------------------------*/
 
 void vOLEDTask( void *pvParameters ){
+  vTaskSuspend(NULL);
   xOLEDMessage xMessage;
   unsigned long ulY, ulMaxY;
   static char cMessage[ mainMAX_MSG_LEN ];
@@ -1055,12 +1024,12 @@ void vOLEDTask( void *pvParameters ){
     if( ulY >= ulMaxY ){
       ulY = mainCHARACTER_HEIGHT;
       vOLEDClear();
-      //vOLEDStringDraw( pcWelcomeMessage, 0, 0, mainFULL_SCALE );
+      
     }
     
     /* Display the message along with the maximum jitter time from the
 		high priority time test. */
-    sprintf( cMessage, "%s", xMessage.pcMessage);//[%uns]", xMessage.pcMessage, ulMaxJitter * mainNS_PER_CLOCK );
+    sprintf( cMessage, "%s", xMessage.pcMessage);
     vOLEDStringDraw( cMessage, 0, ulY, mainFULL_SCALE );
   }
 }
